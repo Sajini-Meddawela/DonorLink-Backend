@@ -9,6 +9,7 @@ export interface InventoryItemDTO {
   stockLevel: number;
   reorderLevel: number;
   itemDescription?: string;
+  careHomeId: number;
 }
 
 function toDTO(inventory: Inventory): InventoryItemDTO {
@@ -18,18 +19,23 @@ function toDTO(inventory: Inventory): InventoryItemDTO {
     category: inventory.category,
     stockLevel: inventory.stockLevel,
     reorderLevel: inventory.reorderLevel,
-    itemDescription: inventory.itemDescription ?? undefined
+    itemDescription: inventory.itemDescription ?? undefined,
+    careHomeId: inventory.careHomeId
   };
 }
 
 export const InventoryModel = {
-  async getAll(): Promise<InventoryItemDTO[]> {
-    const items = await prisma.inventory.findMany();
+  async getAll(careHomeId: number): Promise<InventoryItemDTO[]> {
+    const items = await prisma.inventory.findMany({ 
+      where: { careHomeId } 
+    });
     return items.map(toDTO);
   },
 
-  async getById(id: number): Promise<InventoryItemDTO | null> {
-    const item = await prisma.inventory.findUnique({ where: { id } });
+  async getById(id: number, careHomeId: number): Promise<InventoryItemDTO | null> {
+    const item = await prisma.inventory.findUnique({ 
+      where: { id, careHomeId } 
+    });
     return item ? toDTO(item) : null;
   },
 
@@ -43,9 +49,9 @@ export const InventoryModel = {
     return toDTO(createdItem);
   },
 
-  async update(id: number, item: Partial<InventoryItemDTO>): Promise<InventoryItemDTO> {
+  async update(id: number, careHomeId: number, item: Partial<InventoryItemDTO>): Promise<InventoryItemDTO> {
     const updatedItem = await prisma.inventory.update({ 
-      where: { id }, 
+      where: { id, careHomeId }, 
       data: {
         ...item,
         itemDescription: item.itemDescription ?? null
@@ -54,14 +60,17 @@ export const InventoryModel = {
     return toDTO(updatedItem);
   },
 
-  async delete(id: number): Promise<InventoryItemDTO> {
-    const deletedItem = await prisma.inventory.delete({ where: { id } });
+  async delete(id: number, careHomeId: number): Promise<InventoryItemDTO> {
+    const deletedItem = await prisma.inventory.delete({ 
+      where: { id, careHomeId } 
+    });
     return toDTO(deletedItem);
   },
 
-  async search(query: string): Promise<InventoryItemDTO[]> {
+  async search(query: string, careHomeId: number): Promise<InventoryItemDTO[]> {
     const items = await prisma.inventory.findMany({
       where: {
+        careHomeId,
         OR: [
           { itemName: { contains: query, mode: 'insensitive' } },
           { category: { contains: query, mode: 'insensitive' } },
