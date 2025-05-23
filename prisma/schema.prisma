@@ -25,10 +25,12 @@ model Inventory {
 
 model CareHome {
   id          Int         @id @default(autoincrement())
+  registrationNo    String      @unique
   name        String
   address     String
   phone       String
   email       String
+  category          CareHomeCategory
   inventory   Inventory[]
   needs       Need[]
   mealdonation MealDonationSlot[]
@@ -36,6 +38,14 @@ model CareHome {
   updatedAt   DateTime    @updatedAt
 
   @@map("care_homes")
+}
+
+enum CareHomeCategory {
+  CHILDREN
+  ADULTS
+  SENIORS
+  DISABLED
+  GENERAL
 }
 
 model Donor {

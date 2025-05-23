@@ -2,6 +2,7 @@ import express, { Request, Response, NextFunction } from 'express';
 import { PrismaClient } from '@prisma/client';
 import inventoryRoutes from './routes/inventory.routes';
 import needRoutes from './routes/need.routes';
+import mealDonationRoutes from './routes/mealDonation.routes';
 import dotenv from 'dotenv';
 import cors from 'cors';
 
@@ -24,6 +25,7 @@ app.get('/health', (req: Request, res: Response) => {
 
 app.use('/api/inventory', inventoryRoutes);
 app.use('/api/needs', needRoutes);
+app.use('/api/mealdonations', mealDonationRoutes);
 
 app.use((req: Request, res: Response) => {
   res.status(404).json({ error: 'Endpoint not found' });
