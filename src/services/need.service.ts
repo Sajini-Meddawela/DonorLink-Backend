@@ -13,7 +13,11 @@ export class NeedService {
     return await NeedModel.create(needData);
   }
 
-  static async updateNeed(id: number, careHomeId: number, needData: Partial<NeedItemDTO>): Promise<NeedItemDTO> {
+  static async updateNeed(
+    id: number, 
+    careHomeId: number, 
+    needData: Partial<NeedItemDTO>
+  ): Promise<NeedItemDTO> {
     return await NeedModel.update(id, careHomeId, needData);
   }
 

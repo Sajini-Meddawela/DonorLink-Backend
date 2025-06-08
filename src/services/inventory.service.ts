@@ -1,27 +1,45 @@
-import { InventoryItemDTO, InventoryModel } from '../models/inventory.model';
+import { InventoryItemDTO, InventoryModel } from "../models/inventory.model";
 
 export class InventoryService {
   static async getAllItems(careHomeId: number): Promise<InventoryItemDTO[]> {
+    if (!careHomeId) {
+      throw new Error("Care home ID is required");
+    }
     return await InventoryModel.getAll(careHomeId);
   }
 
-  static async getItemById(id: number, careHomeId: number): Promise<InventoryItemDTO | null> {
+  static async getItemById(
+    id: number,
+    careHomeId: number
+  ): Promise<InventoryItemDTO | null> {
     return await InventoryModel.getById(id, careHomeId);
   }
 
-  static async createItem(itemData: Omit<InventoryItemDTO, 'id'>): Promise<InventoryItemDTO> {
+  static async createItem(
+    itemData: Omit<InventoryItemDTO, "id">
+  ): Promise<InventoryItemDTO> {
     return await InventoryModel.create(itemData);
   }
 
-  static async updateItem(id: number, careHomeId: number, itemData: Partial<InventoryItemDTO>): Promise<InventoryItemDTO> {
+  static async updateItem(
+    id: number,
+    careHomeId: number,
+    itemData: Partial<InventoryItemDTO>
+  ): Promise<InventoryItemDTO> {
     return await InventoryModel.update(id, careHomeId, itemData);
   }
 
-  static async deleteItem(id: number, careHomeId: number): Promise<InventoryItemDTO> {
+  static async deleteItem(
+    id: number,
+    careHomeId: number
+  ): Promise<InventoryItemDTO> {
     return await InventoryModel.delete(id, careHomeId);
   }
 
-  static async searchItems(query: string, careHomeId: number): Promise<InventoryItemDTO[]> {
+  static async searchItems(
+    query: string,
+    careHomeId: number
+  ): Promise<InventoryItemDTO[]> {
     return await InventoryModel.search(query, careHomeId);
   }
 }

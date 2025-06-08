@@ -42,8 +42,12 @@ export const InventoryModel = {
   async create(item: Omit<InventoryItemDTO, 'id'>): Promise<InventoryItemDTO> {
     const createdItem = await prisma.inventory.create({ 
       data: {
-        ...item,
-        itemDescription: item.itemDescription ?? null
+        itemName: item.itemName,
+        category: item.category,
+        stockLevel: item.stockLevel,
+        reorderLevel: item.reorderLevel,
+        itemDescription: item.itemDescription ?? null,
+        careHomeId: item.careHomeId
       }
     });
     return toDTO(createdItem);
@@ -53,7 +57,10 @@ export const InventoryModel = {
     const updatedItem = await prisma.inventory.update({ 
       where: { id, careHomeId }, 
       data: {
-        ...item,
+        itemName: item.itemName,
+        category: item.category,
+        stockLevel: item.stockLevel,
+        reorderLevel: item.reorderLevel,
         itemDescription: item.itemDescription ?? null
       }
     });
