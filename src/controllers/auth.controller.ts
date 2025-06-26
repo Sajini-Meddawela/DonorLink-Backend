@@ -159,7 +159,7 @@ class AuthController {
       OTPService.storeOTP(email, otp);
 
       // Send OTP email
-      await EmailService.sendPasswordResetOTP(email, otp);
+      await EmailService.sendOTPEmail(email, otp);
 
       res.json({ message: 'Password reset OTP sent to your email' });
     } catch (error) {
