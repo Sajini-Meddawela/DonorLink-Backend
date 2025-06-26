@@ -4,6 +4,9 @@ import inventoryRoutes from './routes/inventory.routes';
 import needRoutes from './routes/need.routes';
 import careHomeRoutes from './routes/carehome.routes';
 import mealDonationRoutes from './routes/mealDonation.routes';
+import authRoutes from './routes/auth.routes';
+import userRoutes from './routes/user.routes';
+import { errorHandler } from './middleware/error.midleware';
 import dotenv from 'dotenv';
 import cors from 'cors';
 
@@ -24,6 +27,9 @@ app.get('/health', (req: Request, res: Response) => {
   res.status(200).json({ status: 'OK', timestamp: new Date().toISOString() });
 });
 
+
+app.use('/api/v1/auth', authRoutes);
+app.use('/api/v1/users', userRoutes); 
 app.use('/api/inventory', inventoryRoutes);
 app.use('/api/needs/carehome', needRoutes);
 app.use('/api/mealdonations', mealDonationRoutes);
@@ -38,6 +44,8 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
   console.error(err.stack);
   res.status(500).json({ error: 'Internal server error' });
 });
+
+app.use(errorHandler);
 
 const PORT = process.env.PORT || 4000;
 
