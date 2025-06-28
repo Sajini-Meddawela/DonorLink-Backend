@@ -7,6 +7,37 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model User {
+  id              Int       @id @default(autoincrement())
+  name            String
+  email           String    @unique
+  password        String
+  phone           String
+  address         String?
+  role            Role      @default(DONOR)
+  isVerified      Boolean   @default(false)
+  verificationToken String?
+  resetToken      String?
+  resetTokenExpiry DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // For CareHome specific fields
+  registrationNo  String?
+  category        CareHomeCategory?
+
+  // Relations
+  careHome        CareHome?
+  donor           Donor?
+
+  @@map("users")
+}
+
+enum Role {
+  DONOR
+  CAREHOME
+}
+
 model Inventory {
   id              Int       @id @default(autoincrement())
   itemName        String
@@ -24,18 +55,20 @@ model Inventory {
 }
 
 model CareHome {
-  id          Int         @id @default(autoincrement())
-  registrationNo    String      @unique
-  name        String
-  address     String
-  phone       String
-  email       String
-  category          CareHomeCategory
-  inventory   Inventory[]
-  needs       Need[]
-  mealdonation MealDonationSlot[]
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
+  id              Int         @id @default(autoincrement())
+  registrationNo  String      @unique
+  name            String
+  address         String
+  phone           String
+  email           String
+  category        CareHomeCategory
+  inventory       Inventory[]
+  needs           Need[]
+  mealdonation    MealDonationSlot[]
+  user            User?       @relation(fields: [userId], references: [id])
+  userId          Int?        @unique
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
 
   @@map("care_homes")
 }
@@ -49,15 +82,17 @@ enum CareHomeCategory {
 }
 
 model Donor {
-  id          Int        @id @default(autoincrement())
-  name        String
-  email       String
-  phone       String
-  address     String?
-  donations   Donation[]
-  mealdonation MealDonationSlot[]
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+  id            Int        @id @default(autoincrement())
+  name          String
+  email         String
+  phone         String
+  address       String?
+  donations     Donation[]
+  mealdonation  MealDonationSlot[]
+  user          User?      @relation(fields: [userId], references: [id])
+  userId        Int?       @unique
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
 
   @@map("donors")
 }
