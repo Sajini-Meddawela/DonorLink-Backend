@@ -1,6 +1,5 @@
-// src/services/otp.service.ts
 const otpStore: Record<string, { otp: string; timestamp: number }> = {};
-const OTP_EXPIRY = 5 * 60 * 1000; // 5 minutes
+const OTP_EXPIRY = 5 * 60 * 1000;
 
 class OTPService {
   static generateOTP(): string {
@@ -16,16 +15,19 @@ class OTPService {
 
   static verifyOTP(email: string, otp: string): boolean {
     const stored = otpStore[email];
-    if (!stored) return false;
+    if (!stored) {
+      return false;
+    }
 
-    // Check if OTP is expired
     if (Date.now() - stored.timestamp > OTP_EXPIRY) {
       delete otpStore[email];
       return false;
     }
 
     // Check if OTP matches
-    if (stored.otp !== otp) return false;
+    const isMatch = stored.otp === otp;
+    
+    if (!isMatch) return false;
 
     // OTP is valid, remove it from storage
     delete otpStore[email];

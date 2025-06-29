@@ -43,6 +43,7 @@ export const validateEmail = (data: any) => {
 
 export const validateResetPassword = (data: any) => {
   const schema = Joi.object({
+    email: Joi.string().email().required(),
     token: Joi.string().required(),
     newPassword: Joi.string().min(8).required()
   });
