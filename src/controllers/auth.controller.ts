@@ -5,6 +5,7 @@ import { UserService } from "../services/user.service";
 import { OTPService } from "../services/otp.service";
 import { EmailService } from "../services/email.service";
 import { generateToken } from "../utils/jwt";
+import bcrypt from "bcryptjs";
 import { PrismaClient } from "@prisma/client";
 import {
   validateLogin,
@@ -32,7 +33,6 @@ class AuthController {
         address,
       } = req.body;
 
-      // Check if user exists
       const existingUser = await UserService.findUserByEmail(email);
       if (existingUser) {
         return res.status(400).json({ message: "Email already in use" });
@@ -220,11 +220,9 @@ class AuthController {
         return res.status(404).json({ message: "User not found" });
       }
 
-      // Generate OTP
       const otp = OTPService.generateOTP();
       OTPService.storeOTP(email, otp);
 
-      // Send OTP email
       await EmailService.sendOTPEmail(email, otp);
 
       res.json({ message: "Password reset OTP sent to your email" });
@@ -233,17 +231,19 @@ class AuthController {
       res.status(500).json({ message: "Internal server error" });
     }
   }
-
   static async verifyOTP(req: Request, res: Response) {
     try {
       const { email, otp } = req.body;
+
+      if (!email || !otp) {
+        return res.status(400).json({ message: "Email and OTP are required" });
+      }
 
       const isValid = OTPService.verifyOTP(email, otp);
       if (!isValid) {
         return res.status(400).json({ message: "Invalid OTP" });
       }
 
-      // Generate password reset token
       const resetToken = await AuthService.generatePasswordResetToken(email);
 
       res.json({
@@ -259,15 +259,35 @@ class AuthController {
   static async resetPassword(req: Request, res: Response) {
     try {
       const { error } = validateResetPassword(req.body);
-      if (error)
+      if (error) {
         return res.status(400).json({ message: error.details[0].message });
+      }
 
-      const { token, newPassword } = req.body;
+      const { email, token, newPassword } = req.body;
 
-      const user = await AuthService.resetUserPassword(token, newPassword);
+      // Find user by email and reset token
+      const user = await prisma.user.findFirst({
+        where: {
+          email,
+          resetToken: token,
+          resetTokenExpiry: { gt: new Date() },
+        },
+      });
+
       if (!user) {
         return res.status(400).json({ message: "Invalid or expired token" });
       }
+
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+      await prisma.user.update({
+        where: { id: user.id },
+        data: {
+          password: hashedPassword,
+          resetToken: null,
+          resetTokenExpiry: null,
+        },
+      });
 
       res.json({ message: "Password reset successfully" });
     } catch (error) {
