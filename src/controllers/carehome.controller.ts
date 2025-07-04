@@ -1,5 +1,5 @@
-import { Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
+import { Request, Response } from "express";
+import { PrismaClient, Role } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
@@ -10,12 +10,17 @@ export const CareHomeController = {
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 10;
 
-      const where: any = {};
+      const where: any = {
+        role: Role.CAREHOME,
+        isVerified: true,
+      };
 
       if (search) {
         where.OR = [
-          { name: { contains: search as string, mode: 'insensitive' } },
-          { registrationNo: { contains: search as string, mode: 'insensitive' } }
+          { name: { contains: search as string, mode: "insensitive" } },
+          {
+            registrationNo: { contains: search as string, mode: "insensitive" },
+          },
         ];
       }
 
@@ -24,11 +29,11 @@ export const CareHomeController = {
       }
 
       if (location) {
-        where.address = { contains: location as string, mode: 'insensitive' };
+        where.address = { contains: location as string, mode: "insensitive" };
       }
 
       const [careHomes, total] = await Promise.all([
-        prisma.careHome.findMany({
+        prisma.user.findMany({
           where,
           skip: (page - 1) * limit,
           take: limit,
@@ -39,10 +44,10 @@ export const CareHomeController = {
             address: true,
             phone: true,
             email: true,
-            category: true
-          }
+            category: true,
+          },
         }),
-        prisma.careHome.count({ where })
+        prisma.user.count({ where }),
       ]);
 
       res.json({
@@ -51,11 +56,11 @@ export const CareHomeController = {
           total,
           page,
           limit,
-          totalPages: Math.ceil(total / limit)
-        }
+          totalPages: Math.ceil(total / limit),
+        },
       });
     } catch (error) {
-      res.status(500).json({ error: 'Failed to fetch care homes' });
+      res.status(500).json({ error: "Failed to fetch care homes" });
     }
   },
 
@@ -63,11 +68,15 @@ export const CareHomeController = {
     try {
       const id = parseInt(req.params.id);
       if (isNaN(id)) {
-        return res.status(400).json({ error: 'Invalid care home ID' });
+        return res.status(400).json({ error: "Invalid care home ID" });
       }
 
-      const careHome = await prisma.careHome.findUnique({
-        where: { id },
+      const careHome = await prisma.user.findUnique({
+        where: {
+          id,
+          role: Role.CAREHOME,
+          isVerified: true,
+        },
         select: {
           id: true,
           registrationNo: true,
@@ -75,17 +84,17 @@ export const CareHomeController = {
           address: true,
           phone: true,
           email: true,
-          category: true
-        }
+          category: true,
+        },
       });
 
       if (!careHome) {
-        return res.status(404).json({ error: 'Care home not found' });
+        return res.status(404).json({ error: "Care home not found" });
       }
 
       res.json(careHome);
     } catch (error) {
-      res.status(500).json({ error: 'Failed to fetch care home details' });
+      res.status(500).json({ error: "Failed to fetch care home details" });
     }
-  }
+  },
 };

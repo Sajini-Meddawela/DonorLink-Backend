@@ -1,8 +1,6 @@
-// src/services/auth.service.ts
-import { PrismaClient, Role, CareHomeCategory } from '@prisma/client';
-import bcrypt from 'bcryptjs';
-import { v4 as uuidv4 } from 'uuid';
-import { UserService } from './user.service';
+import { PrismaClient, Role, CareHomeCategory } from "@prisma/client";
+import bcrypt from "bcryptjs";
+import { v4 as uuidv4 } from "uuid";
 
 const prisma = new PrismaClient();
 const saltRounds = 10;
@@ -22,10 +20,10 @@ class AuthService {
   static async registerUser(userData: RegisterUserData) {
     const hashedPassword = await bcrypt.hash(userData.password, saltRounds);
 
-    // Ensure category is valid for CAREHOME role
-    const category = userData.role === 'CAREHOME' 
-      ? userData.category || CareHomeCategory.GENERAL 
-      : undefined;
+    const category =
+      userData.role === "CAREHOME"
+        ? userData.category || CareHomeCategory.GENERAL
+        : undefined;
 
     return prisma.user.create({
       data: {
@@ -37,33 +35,10 @@ class AuthService {
         registrationNo: userData.registrationNo,
         category: category,
         address: userData.address,
-        ...(userData.role === Role.CAREHOME && {
-          careHome: {
-            create: {
-              name: userData.name,
-              email: userData.email,
-              phone: userData.phone,
-              address: userData.address || '',
-              registrationNo: userData.registrationNo || '',
-              category: category || CareHomeCategory.GENERAL
-            }
-          }
-        }),
-        ...(userData.role === Role.DONOR && {
-          donor: {
-            create: {
-              name: userData.name,
-              email: userData.email,
-              phone: userData.phone,
-              address: userData.address || ''
-            }
-          }
-        })
-      }
+      },
     });
   }
 
-  // ... rest of the methods remain the same
   static async comparePassword(password: string, hashedPassword: string) {
     return bcrypt.compare(password, hashedPassword);
   }
@@ -72,7 +47,7 @@ class AuthService {
     const token = uuidv4();
     await prisma.user.update({
       where: { id: userId },
-      data: { verificationToken: token }
+      data: { verificationToken: token },
     });
     return token;
   }
@@ -80,23 +55,23 @@ class AuthService {
   static async verifyUserEmail(userId: number) {
     return prisma.user.update({
       where: { id: userId },
-      data: { 
+      data: {
         isVerified: true,
-        verificationToken: null 
-      }
+        verificationToken: null,
+      },
     });
   }
 
   static async generatePasswordResetToken(email: string) {
     const token = uuidv4();
-    const expiry = new Date(Date.now() + 3600000); // 1 hour from now
+    const expiry = new Date(Date.now() + 3600000);
 
     await prisma.user.update({
       where: { email },
-      data: { 
+      data: {
         resetToken: token,
-        resetTokenExpiry: expiry 
-      }
+        resetTokenExpiry: expiry,
+      },
     });
 
     return token;
@@ -104,10 +79,10 @@ class AuthService {
 
   static async resetUserPassword(token: string, newPassword: string) {
     const user = await prisma.user.findFirst({
-      where: { 
+      where: {
         resetToken: token,
-        resetTokenExpiry: { gt: new Date() } 
-      }
+        resetTokenExpiry: { gt: new Date() },
+      },
     });
 
     if (!user) return null;
@@ -116,11 +91,11 @@ class AuthService {
 
     return prisma.user.update({
       where: { id: user.id },
-      data: { 
+      data: {
         password: hashedPassword,
         resetToken: null,
-        resetTokenExpiry: null 
-      }
+        resetTokenExpiry: null,
+      },
     });
   }
 }

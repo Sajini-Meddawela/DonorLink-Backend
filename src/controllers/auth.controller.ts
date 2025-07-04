@@ -1,4 +1,3 @@
-// src/controllers/auth.controller.ts
 import { Request, Response } from "express";
 import { AuthService } from "../services/auth.service";
 import { UserService } from "../services/user.service";
@@ -38,7 +37,6 @@ class AuthController {
         return res.status(400).json({ message: "Email already in use" });
       }
 
-      // Create user
       const user = await AuthService.registerUser({
         name,
         email,
@@ -55,7 +53,6 @@ class AuthController {
         user.id
       );
 
-      // Send verification email
       await EmailService.sendVerificationEmail(user.email, verificationToken);
 
       res.status(201).json({
@@ -292,6 +289,27 @@ class AuthController {
       res.json({ message: "Password reset successfully" });
     } catch (error) {
       console.error("Reset password error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  }
+
+  static async getCurrentUser(req: Request, res: Response) {
+    try {
+      if (!req.user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      res.json({
+        user: {
+          id: req.user.id,
+          name: req.user.name,
+          email: req.user.email,
+          role: req.user.role,
+          isVerified: req.user.isVerified,
+        },
+      });
+    } catch (error) {
+      console.error("Get current user error:", error);
       res.status(500).json({ message: "Internal server error" });
     }
   }
