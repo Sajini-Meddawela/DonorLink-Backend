@@ -1,4 +1,4 @@
-import { PrismaClient, Role } from '@prisma/client';
+import { PrismaClient, Role } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
@@ -7,9 +7,12 @@ class UserService {
     return prisma.user.findUnique({
       where: { email },
       include: {
-        careHome: true,
-        donor: true
-      }
+        donations: true,
+        needs: true,
+        inventory: true,
+        offeredMealSlots: true,
+        bookedMeals: true,
+      },
     });
   }
 
@@ -17,9 +20,12 @@ class UserService {
     return prisma.user.findUnique({
       where: { id },
       include: {
-        careHome: true,
-        donor: true
-      }
+        donations: true,
+        needs: true,
+        inventory: true,
+        offeredMealSlots: true,
+        bookedMeals: true,
+      },
     });
   }
 
@@ -28,24 +34,30 @@ class UserService {
       where: { id },
       data,
       include: {
-        careHome: true,
-        donor: true
-      }
+        donations: true,
+        needs: true,
+        inventory: true,
+        offeredMealSlots: true,
+        bookedMeals: true,
+      },
     });
   }
 
   static async deleteUser(id: number) {
     return prisma.user.delete({
-      where: { id }
+      where: { id },
     });
   }
 
   static async getAllUsers() {
     return prisma.user.findMany({
       include: {
-        careHome: true,
-        donor: true
-      }
+        donations: true,
+        needs: true,
+        inventory: true,
+        offeredMealSlots: true,
+        bookedMeals: true,
+      },
     });
   }
 
@@ -53,9 +65,12 @@ class UserService {
     return prisma.user.findMany({
       where: { role },
       include: {
-        careHome: role === Role.CAREHOME,
-        donor: role === Role.DONOR
-      }
+        donations: role === Role.DONOR,
+        needs: role === Role.CAREHOME,
+        inventory: role === Role.CAREHOME,
+        offeredMealSlots: role === Role.CAREHOME,
+        bookedMeals: role === Role.DONOR,
+      },
     });
   }
 }

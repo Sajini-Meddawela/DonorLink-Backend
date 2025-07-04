@@ -1,4 +1,4 @@
-import { PrismaClient, Inventory } from '@prisma/client';
+import { PrismaClient, Inventory } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
@@ -9,7 +9,7 @@ export interface InventoryItemDTO {
   stockLevel: number;
   reorderLevel: number;
   itemDescription?: string;
-  careHomeId: number;
+  userId: number;
 }
 
 function toDTO(inventory: Inventory): InventoryItemDTO {
@@ -20,71 +20,75 @@ function toDTO(inventory: Inventory): InventoryItemDTO {
     stockLevel: inventory.stockLevel,
     reorderLevel: inventory.reorderLevel,
     itemDescription: inventory.itemDescription ?? undefined,
-    careHomeId: inventory.careHomeId
+    userId: inventory.userId,
   };
 }
 
 export const InventoryModel = {
-  async getAll(careHomeId: number): Promise<InventoryItemDTO[]> {
-    const items = await prisma.inventory.findMany({ 
-      where: { careHomeId } 
+  async getAll(userId: number): Promise<InventoryItemDTO[]> {
+    const items = await prisma.inventory.findMany({
+      where: { userId },
     });
     return items.map(toDTO);
   },
 
-  async getById(id: number, careHomeId: number): Promise<InventoryItemDTO | null> {
-    const item = await prisma.inventory.findUnique({ 
-      where: { id, careHomeId } 
+  async getById(id: number, userId: number): Promise<InventoryItemDTO | null> {
+    const item = await prisma.inventory.findUnique({
+      where: { id, userId },
     });
     return item ? toDTO(item) : null;
   },
 
-  async create(item: Omit<InventoryItemDTO, 'id'>): Promise<InventoryItemDTO> {
-    const createdItem = await prisma.inventory.create({ 
+  async create(item: Omit<InventoryItemDTO, "id">): Promise<InventoryItemDTO> {
+    const createdItem = await prisma.inventory.create({
       data: {
         itemName: item.itemName,
         category: item.category,
         stockLevel: item.stockLevel,
         reorderLevel: item.reorderLevel,
         itemDescription: item.itemDescription ?? null,
-        careHomeId: item.careHomeId
-      }
+        userId: item.userId,
+      },
     });
     return toDTO(createdItem);
   },
 
-  async update(id: number, careHomeId: number, item: Partial<InventoryItemDTO>): Promise<InventoryItemDTO> {
-    const updatedItem = await prisma.inventory.update({ 
-      where: { id, careHomeId }, 
+  async update(
+    id: number,
+    userId: number,
+    item: Partial<InventoryItemDTO>
+  ): Promise<InventoryItemDTO> {
+    const updatedItem = await prisma.inventory.update({
+      where: { id, userId },
       data: {
         itemName: item.itemName,
         category: item.category,
         stockLevel: item.stockLevel,
         reorderLevel: item.reorderLevel,
-        itemDescription: item.itemDescription ?? null
-      }
+        itemDescription: item.itemDescription ?? null,
+      },
     });
     return toDTO(updatedItem);
   },
 
-  async delete(id: number, careHomeId: number): Promise<InventoryItemDTO> {
-    const deletedItem = await prisma.inventory.delete({ 
-      where: { id, careHomeId } 
+  async delete(id: number, userId: number): Promise<InventoryItemDTO> {
+    const deletedItem = await prisma.inventory.delete({
+      where: { id, userId },
     });
     return toDTO(deletedItem);
   },
 
-  async search(query: string, careHomeId: number): Promise<InventoryItemDTO[]> {
+  async search(query: string, userId: number): Promise<InventoryItemDTO[]> {
     const items = await prisma.inventory.findMany({
       where: {
-        careHomeId,
+        userId,
         OR: [
-          { itemName: { contains: query, mode: 'insensitive' } },
-          { category: { contains: query, mode: 'insensitive' } },
-          { itemDescription: { contains: query, mode: 'insensitive' } }
-        ]
-      }
+          { itemName: { contains: query, mode: "insensitive" } },
+          { category: { contains: query, mode: "insensitive" } },
+          { itemDescription: { contains: query, mode: "insensitive" } },
+        ],
+      },
     });
     return items.map(toDTO);
-  }
+  },
 };
