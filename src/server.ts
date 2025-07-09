@@ -31,7 +31,7 @@ app.get('/health', (req: Request, res: Response) => {
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/users', userRoutes); 
 app.use('/api/inventory', inventoryRoutes);
-app.use('/api/needs/carehome', needRoutes);
+app.use('/api/needs', needRoutes);
 app.use('/api/mealdonations', mealDonationRoutes);
 app.use('/api/carehomes', careHomeRoutes);
 
