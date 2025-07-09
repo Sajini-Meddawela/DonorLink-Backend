@@ -1,12 +1,12 @@
 import { NeedItemDTO, NeedModel } from '../models/need.model';
 
 export class NeedService {
-  static async getAllNeeds(careHomeId: number): Promise<NeedItemDTO[]> {
-    return await NeedModel.getAll(careHomeId);
+  static async getAllNeeds(userId: number): Promise<NeedItemDTO[]> {
+    return await NeedModel.getAll(userId);
   }
 
-  static async getNeedById(id: number, careHomeId: number): Promise<NeedItemDTO | null> {
-    return await NeedModel.getById(id, careHomeId);
+  static async getNeedById(id: number, userId: number): Promise<NeedItemDTO | null> {
+    return await NeedModel.getById(id, userId);
   }
 
   static async createNeed(needData: Omit<NeedItemDTO, 'id'>): Promise<NeedItemDTO> {
@@ -15,17 +15,13 @@ export class NeedService {
 
   static async updateNeed(
     id: number, 
-    careHomeId: number, 
+    userId: number, 
     needData: Partial<NeedItemDTO>
   ): Promise<NeedItemDTO> {
-    return await NeedModel.update(id, careHomeId, needData);
+    return await NeedModel.update(id, userId, needData);
   }
 
-  static async deleteNeed(id: number, careHomeId: number): Promise<NeedItemDTO> {
-    return await NeedModel.delete(id, careHomeId);
-  }
-
-  static async searchNeeds(query: string, careHomeId: number): Promise<NeedItemDTO[]> {
-    return await NeedModel.search(query, careHomeId);
+  static async deleteNeed(id: number, userId: number): Promise<void> {
+    await NeedModel.delete(id, userId);
   }
 }
