@@ -1,21 +1,22 @@
-import { NeedItemDTO, NeedModel } from '../models/need.model';
+import { NeedItemDTO, NeedModel } from "../models/need.model";
 
 export class NeedService {
   static async getAllNeeds(userId: number): Promise<NeedItemDTO[]> {
     return await NeedModel.getAll(userId);
   }
 
-  static async getNeedById(id: number, userId: number): Promise<NeedItemDTO | null> {
-    return await NeedModel.getById(id, userId);
+  static async getNeedById(id: number): Promise<NeedItemDTO | null> {
+    return await NeedModel.getById(id);
   }
-
-  static async createNeed(needData: Omit<NeedItemDTO, 'id'>): Promise<NeedItemDTO> {
+  static async createNeed(
+    needData: Omit<NeedItemDTO, "id">
+  ): Promise<NeedItemDTO> {
     return await NeedModel.create(needData);
   }
 
   static async updateNeed(
-    id: number, 
-    userId: number, 
+    id: number,
+    userId: number,
     needData: Partial<NeedItemDTO>
   ): Promise<NeedItemDTO> {
     return await NeedModel.update(id, userId, needData);

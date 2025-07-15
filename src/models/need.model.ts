@@ -32,9 +32,9 @@ export const NeedModel = {
     return items.map(toDTO);
   },
 
-  async getById(id: number, userId: number): Promise<NeedItemDTO | null> {
+  async getById(id: number): Promise<NeedItemDTO | null> {
     const item = await prisma.need.findUnique({
-      where: { id, userId },
+      where: { id },
     });
     return item ? toDTO(item) : null;
   },

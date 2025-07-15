@@ -7,15 +7,15 @@ export class NeedController {
     try {
       const userId = req.user?.id;
       if (!userId) {
-        res.status(401).json({ error: 'Unauthorized' });
+        res.status(401).json({ error: "Unauthorized" });
         return;
       }
-      
+
       const items = await NeedService.getAllNeeds(userId);
       res.status(200).json(items);
     } catch (error) {
-      console.error('Error fetching needs:', error);
-      res.status(500).json({ error: 'Failed to fetch needs' });
+      console.error("Error fetching needs:", error);
+      res.status(500).json({ error: "Failed to fetch needs" });
     }
   }
 
@@ -23,29 +23,28 @@ export class NeedController {
     try {
       const userId = parseInt(req.params.userId);
       if (isNaN(userId)) {
-        res.status(400).json({ error: 'Invalid user ID' });
+        res.status(400).json({ error: "Invalid user ID" });
         return;
       }
-      
+
       const items = await NeedService.getAllNeeds(userId);
       res.status(200).json(items);
     } catch (error) {
-      console.error('Error fetching user needs:', error);
-      res.status(500).json({ error: 'Failed to fetch user needs' });
+      console.error("Error fetching user needs:", error);
+      res.status(500).json({ error: "Failed to fetch user needs" });
     }
   }
-  
+
   static async getNeedById(req: Request, res: Response): Promise<void> {
     try {
       const id = parseInt(req.params.id);
-      const userId = req.user?.id;
 
-      if (isNaN(id) || !userId) {
-        res.status(400).json({ error: "Invalid ID or unauthorized" });
+      if (isNaN(id)) {
+        res.status(400).json({ error: "Invalid ID" });
         return;
       }
 
-      const item = await NeedService.getNeedById(id, userId);
+      const item = await NeedService.getNeedById(id);
       if (item) {
         res.status(200).json(item);
       } else {
