@@ -49,17 +49,25 @@ export const NeedModel = {
     return toDTO(createdItem);
   },
 
-  async update(
-    id: number,
-    userId: number,
-    item: Partial<NeedItemDTO>
-  ): Promise<NeedItemDTO> {
+async update(
+  id: number,
+  userId: number,
+  item: Partial<NeedItemDTO>
+): Promise<NeedItemDTO> {
+  try {
     const updatedItem = await prisma.need.update({
-      where: { id, userId },
+      where: { 
+        id,
+        userId // Ensure we're updating the correct user's need
+      },
       data: item,
     });
     return toDTO(updatedItem);
-  },
+  } catch (error) {
+    console.error('Prisma update error:', error);
+    throw error;
+  }
+},
 
   async delete(id: number, userId: number): Promise<NeedItemDTO> {
     const deletedItem = await prisma.need.delete({

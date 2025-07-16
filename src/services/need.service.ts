@@ -19,7 +19,13 @@ export class NeedService {
     userId: number,
     needData: Partial<NeedItemDTO>
   ): Promise<NeedItemDTO> {
-    return await NeedModel.update(id, userId, needData);
+    try {
+      const updatedItem = await NeedModel.update(id, userId, needData);
+      return updatedItem;
+    } catch (error) {
+      console.error("Error updating need:", error);
+      throw error;
+    }
   }
 
   static async deleteNeed(id: number, userId: number): Promise<void> {

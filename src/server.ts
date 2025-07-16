@@ -5,6 +5,7 @@ import needRoutes from './routes/need.routes';
 import careHomeRoutes from './routes/carehome.routes';
 import mealDonationRoutes from './routes/mealDonation.routes';
 import authRoutes from './routes/auth.routes';
+import donationRoutes from './routes/donation.routes';
 import userRoutes from './routes/user.routes';
 import { errorHandler } from './middleware/error.midleware';
 import dotenv from 'dotenv';
@@ -34,6 +35,7 @@ app.use('/api/inventory', inventoryRoutes);
 app.use('/api/needs', needRoutes);
 app.use('/api/mealdonations', mealDonationRoutes);
 app.use('/api/carehomes', careHomeRoutes);
+app.use('/api/donations', donationRoutes);
 
 app.use((req: Request, res: Response) => {
   res.status(404).json({ error: 'Endpoint not found' });

@@ -58,7 +58,7 @@ model Inventory {
   itemDescription String?
   userId          Int
   user            User      @relation(fields: [userId], references: [id])
-  donations       Donation[]
+  donations       Donation[] @relation("InventoryDonations")
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
@@ -73,9 +73,11 @@ model Donation {
   notes       String?
   donorId     Int
   donor       User     @relation(fields: [donorId], references: [id])
-  inventoryId Int
-  inventory   Inventory @relation(fields: [inventoryId], references: [id])
-
+  needId      Int
+  need        Need     @relation(fields: [needId], references: [id], name: "NeedDonations")
+  inventory   Inventory? @relation(fields: [inventoryId], references: [id], name: "InventoryDonations")
+  inventoryId Int?
+  
   @@map("donations")
 }
 
@@ -88,6 +90,7 @@ model Need {
   urgencyLevel     String   @db.VarChar(10)
   userId           Int
   user             User     @relation(fields: [userId], references: [id])
+  donations        Donation[] @relation("NeedDonations")
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
