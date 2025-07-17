@@ -7,19 +7,16 @@ export class DonationService {
     donationData: Omit<DonationDTO, "id">
   ): Promise<DonationDTO> {
     try {
-      // First verify the need exists
       const need = await NeedService.getNeedById(donationData.needId);
       if (!need) {
         throw new Error("Need not found");
       }
 
-      // Create the donation record
       const donation = await DonationModel.create({
         ...donationData,
         status: "completed",
       });
 
-      // Update the need's current quantity
       const newCurrentQuantity = need.currentQuantity + donationData.quantity;
       await NeedService.updateNeed(donationData.needId, need.userId, {
         currentQuantity: newCurrentQuantity,
@@ -33,7 +30,16 @@ export class DonationService {
   }
 
   static async getDonationById(id: number): Promise<DonationDTO | null> {
-    return DonationModel.getById(id);
+    try {
+      const donation = await DonationModel.getById(id);
+      if (!donation) {
+        throw new Error("Donation not found");
+      }
+      return donation;
+    } catch (error) {
+      console.error("Error fetching donation:", error);
+      throw error;
+    }
   }
 
   static async getDonationsByDonor(donorId: number): Promise<DonationDTO[]> {

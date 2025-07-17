@@ -29,6 +29,7 @@ export class DonationController {
       });
     }
   }
+
   static async getDonationById(req: Request, res: Response): Promise<void> {
     try {
       const id = parseInt(req.params.id);
@@ -38,14 +39,18 @@ export class DonationController {
       }
 
       const donation = await DonationService.getDonationById(id);
-      if (donation) {
-        res.status(200).json(donation);
-      } else {
+      if (!donation) {
         res.status(404).json({ error: "Donation not found" });
+        return;
       }
+
+      res.status(200).json(donation);
     } catch (error) {
       console.error("Error fetching donation:", error);
-      res.status(500).json({ error: "Failed to fetch donation" });
+      res.status(500).json({
+        error: "Failed to fetch donation",
+        details: error instanceof Error ? error.message : "Unknown error",
+      });
     }
   }
 
