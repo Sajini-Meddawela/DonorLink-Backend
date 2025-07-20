@@ -8,6 +8,7 @@ export class NeedService {
   static async getNeedById(id: number): Promise<NeedItemDTO | null> {
     return await NeedModel.getById(id);
   }
+
   static async createNeed(
     needData: Omit<NeedItemDTO, "id">
   ): Promise<NeedItemDTO> {
@@ -30,5 +31,9 @@ export class NeedService {
 
   static async deleteNeed(id: number, userId: number): Promise<void> {
     await NeedModel.delete(id, userId);
+  }
+
+  static async getCareHomeNeeds(careHomeId: number): Promise<NeedItemDTO[]> {
+    return await NeedModel.getAll(careHomeId);
   }
 }

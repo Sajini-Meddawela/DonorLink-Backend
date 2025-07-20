@@ -85,8 +85,7 @@ export const DonationModel = {
       },
       include: {
         donor: true,
-        need: true,
-        inventory: {
+        need: {
           include: {
             user: true,
           },
@@ -107,15 +106,10 @@ export const DonationModel = {
             user: true,
           },
         },
-        inventory: true,
       },
     });
 
     if (!donation) return null;
-
-    if (!donation.need) {
-      throw new Error("Need not found for this donation");
-    }
 
     return toDTO(donation);
   },
@@ -134,19 +128,14 @@ export const DonationModel = {
   ): Promise<DonationDTO> {
     const updatedDonation = await prisma.donation.update({
       where: { id },
-      data: {
-        quantity: donationData.quantity,
-        date: donationData.date,
-        status: donationData.status,
-        notes: donationData.notes,
-        donorId: donationData.donorId,
-        needId: donationData.needId,
-        inventoryId: donationData.inventoryId,
-      },
+      data: donationData,
       include: {
         donor: true,
-        need: true,
-        inventory: true,
+        need: {
+          include: {
+            user: true,
+          },
+        },
       },
     });
     return toDTO(updatedDonation);
@@ -163,8 +152,11 @@ export const DonationModel = {
       where: { donorId },
       include: {
         donor: true,
-        need: true,
-        inventory: true,
+        need: {
+          include: {
+            user: true,
+          },
+        },
       },
     });
     return donations.map(toDTO);
@@ -175,8 +167,33 @@ export const DonationModel = {
       where: { needId },
       include: {
         donor: true,
-        need: true,
-        inventory: true,
+        need: {
+          include: {
+            user: true,
+          },
+        },
+      },
+    });
+    return donations.map(toDTO);
+  },
+
+  async getByCareHomeId(careHomeId: number): Promise<DonationDTO[]> {
+    const donations = await prisma.donation.findMany({
+      where: {
+        need: {
+          userId: careHomeId,
+        },
+      },
+      include: {
+        donor: true,
+        need: {
+          include: {
+            user: true,
+          },
+        },
+      },
+      orderBy: {
+        date: "desc",
       },
     });
     return donations.map(toDTO);
