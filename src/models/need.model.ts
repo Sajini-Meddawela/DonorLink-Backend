@@ -41,51 +41,26 @@ export const NeedModel = {
 
   async create(item: Omit<NeedItemDTO, "id">): Promise<NeedItemDTO> {
     const createdItem = await prisma.need.create({
-      data: {
-        ...item,
-        id: undefined,
-      },
+      data: item,
     });
     return toDTO(createdItem);
   },
 
-async update(
-  id: number,
-  userId: number,
-  item: Partial<NeedItemDTO>
-): Promise<NeedItemDTO> {
-  try {
+  async update(
+    id: number,
+    userId: number,
+    item: Partial<NeedItemDTO>
+  ): Promise<NeedItemDTO> {
     const updatedItem = await prisma.need.update({
-      where: { 
-        id,
-        userId // Ensure we're updating the correct user's need
-      },
+      where: { id, userId },
       data: item,
     });
     return toDTO(updatedItem);
-  } catch (error) {
-    console.error('Prisma update error:', error);
-    throw error;
-  }
-},
-
-  async delete(id: number, userId: number): Promise<NeedItemDTO> {
-    const deletedItem = await prisma.need.delete({
-      where: { id, userId },
-    });
-    return toDTO(deletedItem);
   },
 
-  async search(query: string, userId: number): Promise<NeedItemDTO[]> {
-    const items = await prisma.need.findMany({
-      where: {
-        userId,
-        OR: [
-          { itemName: { contains: query, mode: "insensitive" } },
-          { category: { contains: query, mode: "insensitive" } },
-        ],
-      },
+  async delete(id: number, userId: number): Promise<void> {
+    await prisma.need.delete({
+      where: { id, userId },
     });
-    return items.map(toDTO);
   },
 };

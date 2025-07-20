@@ -1,25 +1,36 @@
-import { Router } from 'express';
-import { DonationController } from '../controllers/donation.controller';
-import { authenticate, authorize } from '../middleware/auth.middleware';
-import { Role } from '@prisma/client';
+import { Router } from "express";
+import { DonationController } from "../controllers/donation.controller";
+import { authenticate, authorize } from "../middleware/auth.middleware";
+import { Role } from "@prisma/client";
 
 const router = Router();
 
 // Create donation (authenticated users)
-router.post('/', authenticate, DonationController.createDonation);
+router.post("/", authenticate, DonationController.createDonation);
 
 // Get donation by ID
-router.get('/:id', authenticate, DonationController.getDonationById);
+router.get("/:id", authenticate, DonationController.getDonationById);
+
+router.get(
+  "/carehome/:careHomeId",
+  authenticate,
+  authorize([Role.CAREHOME]),
+  DonationController.getCareHomeDonations
+);
 
 // Get donations by donor
-router.get('/donor/:donorId', authenticate, DonationController.getDonorDonations);
+router.get(
+  "/donor/:donorId",
+  authenticate,
+  DonationController.getDonorDonations
+);
 
 // Get donations by need
-router.get('/need/:needId', authenticate, DonationController.getNeedDonations);
+router.get("/need/:needId", authenticate, DonationController.getNeedDonations);
 
 // Update donation status (admin only)
 router.patch(
-  '/:id/status',
+  "/:id/status",
   authenticate,
   authorize([Role.CAREHOME]),
   DonationController.updateDonationStatus
@@ -27,7 +38,7 @@ router.patch(
 
 // Delete donation (admin only)
 router.delete(
-  '/:id',
+  "/:id",
   authenticate,
   authorize([Role.CAREHOME]),
   DonationController.deleteDonation

@@ -14,7 +14,7 @@ export class DonationService {
 
       const donation = await DonationModel.create({
         ...donationData,
-        status: "completed",
+        status: "pending",
       });
 
       const newCurrentQuantity = need.currentQuantity + donationData.quantity;
@@ -59,5 +59,11 @@ export class DonationService {
 
   static async deleteDonation(id: number): Promise<void> {
     await DonationModel.delete(id);
+  }
+
+  static async getCareHomeDonations(
+    careHomeId: number
+  ): Promise<DonationDTO[]> {
+    return DonationModel.getByCareHomeId(careHomeId);
   }
 }
