@@ -1,11 +1,15 @@
-import { MealDonationModel } from '../models/mealDonation.model';
+import { MealDonationModel } from "../models/mealDonation.model";
 
 export class MealDonationService {
   static async getSlots(careHomeId: number, startDate: Date, endDate: Date) {
     return MealDonationModel.getSlots(careHomeId, startDate, endDate);
   }
 
-  static async createSlots(careHomeId: number, date: Date, mealTypes: string[]) {
+  static async createSlots(
+    careHomeId: number,
+    date: Date,
+    mealTypes: string[]
+  ) {
     return MealDonationModel.createSlots(careHomeId, date, mealTypes);
   }
 
@@ -15,5 +19,12 @@ export class MealDonationService {
 
   static async getDonorBookings(donorId: number) {
     return MealDonationModel.getDonorBookings(donorId);
+  }
+
+  static async updateSlotStatus(
+    slotId: number,
+    status: "completed" | "cancelled"
+  ) {
+    return MealDonationModel.updateSlotStatus(slotId, status);
   }
 }

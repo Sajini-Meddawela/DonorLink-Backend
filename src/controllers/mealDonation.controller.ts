@@ -22,9 +22,9 @@ export class MealDonationController {
       res.status(200).json(slots);
     } catch (error) {
       console.error("Error in getSlots:", error);
-      res.status(500).json({ 
+      res.status(500).json({
         error: "Failed to fetch meal slots",
-        details: error instanceof Error ? error.message : "Unknown error"
+        details: error instanceof Error ? error.message : "Unknown error",
       });
     }
   }
@@ -33,15 +33,15 @@ export class MealDonationController {
     try {
       console.log("Request body:", req.body);
       const { careHomeId, date, mealTypes } = req.body;
-      
+
       // Validation
       if (!careHomeId || !date || !mealTypes) {
-        res.status(400).json({ 
-          error: "Missing required fields: careHomeId, date, or mealTypes" 
+        res.status(400).json({
+          error: "Missing required fields: careHomeId, date, or mealTypes",
         });
         return;
       }
-      
+
       if (!Array.isArray(mealTypes)) {
         res.status(400).json({ error: "mealTypes must be an array" });
         return;
@@ -58,31 +58,31 @@ export class MealDonationController {
         parsedDate,
         mealTypes
       );
-      
+
       res.status(201).json(slots);
     } catch (error) {
       console.error("Error in createSlots:", error);
-      
+
       if (error instanceof Prisma.PrismaClientKnownRequestError) {
-        if (error.code === 'P2002') {
-          res.status(409).json({ 
+        if (error.code === "P2002") {
+          res.status(409).json({
             error: "Slot already exists for this date and meal type",
-            meta: error.meta
+            meta: error.meta,
           });
           return;
         }
-        if (error.code === 'P2003') {
-          res.status(404).json({ 
+        if (error.code === "P2003") {
+          res.status(404).json({
             error: "CareHome not found",
-            meta: error.meta
+            meta: error.meta,
           });
           return;
         }
       }
 
-      res.status(400).json({ 
+      res.status(400).json({
         error: "Failed to create meal slots",
-        details: error instanceof Error ? error.message : "Unknown error"
+        details: error instanceof Error ? error.message : "Unknown error",
       });
     }
   }
@@ -101,20 +101,20 @@ export class MealDonationController {
       res.status(200).json(bookedSlot);
     } catch (error) {
       console.error("Error in bookSlot:", error);
-      
+
       if (error instanceof Prisma.PrismaClientKnownRequestError) {
-        if (error.code === 'P2025') {
-          res.status(404).json({ 
+        if (error.code === "P2025") {
+          res.status(404).json({
             error: "Slot not found or already booked",
-            meta: error.meta
+            meta: error.meta,
           });
           return;
         }
       }
 
-      res.status(400).json({ 
+      res.status(400).json({
         error: "Failed to book meal slot",
-        details: error instanceof Error ? error.message : "Unknown error"
+        details: error instanceof Error ? error.message : "Unknown error",
       });
     }
   }
@@ -122,7 +122,7 @@ export class MealDonationController {
   static async getDonorBookings(req: Request, res: Response): Promise<void> {
     try {
       const donorId = parseInt(req.query.donorId as string);
-      
+
       if (isNaN(donorId)) {
         res.status(400).json({ error: "Invalid donorId" });
         return;
@@ -132,9 +132,53 @@ export class MealDonationController {
       res.status(200).json(bookings);
     } catch (error) {
       console.error("Error in getDonorBookings:", error);
-      res.status(500).json({ 
+      res.status(500).json({
         error: "Failed to fetch donor bookings",
-        details: error instanceof Error ? error.message : "Unknown error"
+        details: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  }
+
+  static async updateSlotStatus(req: Request, res: Response): Promise<void> {
+    try {
+      const slotId = parseInt(req.params.id);
+      const { status } = req.body;
+
+      if (isNaN(slotId)) {
+        res.status(400).json({ error: "Invalid slot ID" });
+        return;
+      }
+
+      if (!status || !["completed", "cancelled"].includes(status)) {
+        res
+          .status(400)
+          .json({
+            error: "Invalid status. Must be 'completed' or 'cancelled'",
+          });
+        return;
+      }
+
+      const updatedSlot = await MealDonationService.updateSlotStatus(
+        slotId,
+        status
+      );
+      res.status(200).json(updatedSlot);
+    } catch (error) {
+      console.error("Error in updateSlotStatus:", error);
+
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        if (error.code === "P2025") {
+          res.status(404).json({
+            error: "Slot not found",
+            meta: error.meta,
+          });
+          return;
+        }
+      }
+
+      res.status(400).json({
+        error: "Failed to update slot status",
+        details: error instanceof Error ? error.message : "Unknown error",
       });
     }
   }

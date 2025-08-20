@@ -1,11 +1,12 @@
-import { Router } from 'express';
-import { MealDonationController } from '../controllers/mealDonation.controller';
+import { Router } from "express";
+import { MealDonationController } from "../controllers/mealDonation.controller";
 
 const router = Router();
 
-router.get('/', MealDonationController.getSlots);
-router.post('/', MealDonationController.createSlots);
-router.post('/:id/book', MealDonationController.bookSlot);
-router.get('/donor', MealDonationController.getDonorBookings);
+router.get("/", MealDonationController.getSlots);
+router.post("/", MealDonationController.createSlots);
+router.post("/:id/book", MealDonationController.bookSlot);
+router.get("/donor", MealDonationController.getDonorBookings);
+router.patch("/:id/status", MealDonationController.updateSlotStatus);
 
 export default router;
