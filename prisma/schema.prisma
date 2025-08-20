@@ -8,31 +8,31 @@ datasource db {
 }
 
 model User {
-  id              Int       @id @default(autoincrement())
-  name            String
-  email           String    @unique
-  password        String
-  phone           String
-  address         String?
-  role            Role      @default(DONOR)
-  isVerified      Boolean   @default(false)
+  id                Int       @id @default(autoincrement())
+  name              String
+  email             String    @unique
+  password          String
+  phone             String
+  address           String?
+  role              Role      @default(DONOR)
+  isVerified        Boolean   @default(false)
   verificationToken String?
-  resetToken      String?
-  resetTokenExpiry DateTime?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  resetToken        String?
+  resetTokenExpiry  DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
 
   // For CareHome specific fields
-  registrationNo  String?
-  category        CareHomeCategory?
+  registrationNo String?
+  category       CareHomeCategory?
 
   // Relations
-  donations       Donation[]
-  needs           Need[]
-  inventory       Inventory[]
+  donations        Donation[]
+  needs            Need[]
+  inventory        Inventory[]
   offeredMealSlots MealDonationSlot[] @relation("CareHomeMeals")
-  bookedMeals     MealDonationSlot[] @relation("DonorBookedMeals")
-  
+  bookedMeals      MealDonationSlot[] @relation("DonorBookedMeals")
+
   @@map("users")
 }
 
@@ -50,64 +50,64 @@ enum CareHomeCategory {
 }
 
 model Inventory {
-  id              Int       @id @default(autoincrement())
+  id              Int        @id @default(autoincrement())
   itemName        String
   category        String
   stockLevel      Int
   reorderLevel    Int
   itemDescription String?
   userId          Int
-  user            User      @relation(fields: [userId], references: [id])
+  user            User       @relation(fields: [userId], references: [id])
   donations       Donation[] @relation("InventoryDonations")
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
 
   @@map("inventory")
 }
 
 model Donation {
-  id          Int      @id @default(autoincrement())
+  id          Int        @id @default(autoincrement())
   quantity    Int
-  date        DateTime @default(now())
-  status      String   @default("pending")
+  date        DateTime   @default(now())
+  status      String     @default("pending")
   notes       String?
   donorId     Int
-  donor       User     @relation(fields: [donorId], references: [id])
+  donor       User       @relation(fields: [donorId], references: [id])
   needId      Int
-  need        Need     @relation(fields: [needId], references: [id], name: "NeedDonations")
+  need        Need       @relation(fields: [needId], references: [id], name: "NeedDonations")
   inventory   Inventory? @relation(fields: [inventoryId], references: [id], name: "InventoryDonations")
   inventoryId Int?
-  
+
   @@map("donations")
 }
 
 model Need {
-  id               Int      @id @default(autoincrement())
+  id               Int        @id @default(autoincrement())
   itemName         String
   requiredQuantity Int
   currentQuantity  Int
   category         String
-  urgencyLevel     String   @db.VarChar(10)
+  urgencyLevel     String     @db.VarChar(10)
   userId           Int
-  user             User     @relation(fields: [userId], references: [id])
+  user             User       @relation(fields: [userId], references: [id])
   donations        Donation[] @relation("NeedDonations")
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
 
   @@map("needs")
 }
 
 model MealDonationSlot {
-  id          Int       @id @default(autoincrement())
-  date        DateTime
-  mealType    MealType
-  status      SlotStatus @default(Available)
-  careHomeId  Int
-  careHome    User      @relation("CareHomeMeals", fields: [careHomeId], references: [id])
-  donorId     Int?
-  donor       User?     @relation("DonorBookedMeals", fields: [donorId], references: [id])
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id         Int        @id @default(autoincrement())
+  date       DateTime
+  mealType   MealType
+  status     SlotStatus @default(Available)
+  careHomeId Int
+  careHome   User       @relation("CareHomeMeals", fields: [careHomeId], references: [id])
+  donorId    Int?
+  donor      User?      @relation("DonorBookedMeals", fields: [donorId], references: [id])
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
 
   @@unique([date, mealType, careHomeId])
 }
@@ -122,4 +122,5 @@ enum SlotStatus {
   Available
   Booked
   Completed
+  Cancelled
 }
