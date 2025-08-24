@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from "express";
+import { Socket } from "socket.io";
 import jwt from "jsonwebtoken";
 import { PrismaClient, Role } from "@prisma/client";
 
@@ -67,4 +68,41 @@ export const authorize = (roles: Role[]) => {
     }
     next();
   };
+};
+
+export const authenticateSocket = async (socket: Socket, next: (err?: any) => void) => {
+  try {
+    const token = socket.handshake.auth.token;
+    
+    if (!token) {
+      return next(new Error('Authentication error: No token provided'));
+    }
+
+    const decoded = jwt.verify(token, JWT_SECRET) as JwtPayload;
+    
+    const user = await prisma.user.findUnique({
+      where: { id: decoded.userId },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        isVerified: true,
+      },
+    });
+
+    if (!user) {
+      return next(new Error('Authentication error: User not found'));
+    }
+
+    if (!user.isVerified) {
+      return next(new Error('Authentication error: Email not verified'));
+    }
+
+    (socket as any).user = user;
+    next();
+  } catch (error) {
+    console.error('Socket authentication error:', error);
+    next(new Error('Authentication error: Invalid token'));
+  }
 };

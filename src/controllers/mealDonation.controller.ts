@@ -31,7 +31,6 @@ export class MealDonationController {
 
   static async createSlots(req: Request, res: Response): Promise<void> {
     try {
-      console.log("Request body:", req.body);
       const { careHomeId, date, mealTypes } = req.body;
 
       // Validation
