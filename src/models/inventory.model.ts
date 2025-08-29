@@ -8,6 +8,7 @@ export interface InventoryItemDTO {
   category: string;
   stockLevel: number;
   reorderLevel: number;
+  unit: string;
   itemDescription?: string;
   userId: number;
 }
@@ -19,6 +20,7 @@ function toDTO(inventory: Inventory): InventoryItemDTO {
     category: inventory.category,
     stockLevel: inventory.stockLevel,
     reorderLevel: inventory.reorderLevel,
+    unit: inventory.unit,
     itemDescription: inventory.itemDescription ?? undefined,
     userId: inventory.userId,
   };
@@ -46,6 +48,7 @@ export const InventoryModel = {
         category: item.category,
         stockLevel: item.stockLevel,
         reorderLevel: item.reorderLevel,
+        unit: item.unit,
         itemDescription: item.itemDescription ?? null,
         userId: item.userId,
       },
@@ -65,6 +68,7 @@ export const InventoryModel = {
         category: item.category,
         stockLevel: item.stockLevel,
         reorderLevel: item.reorderLevel,
+        unit: item.unit,
         itemDescription: item.itemDescription ?? null,
       },
     });
