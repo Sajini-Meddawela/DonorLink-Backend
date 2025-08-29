@@ -29,9 +29,8 @@ export class MealDonationController {
     }
   }
 
-  static async createSlots(req: Request, res: Response): Promise<void> {
+    static async createSlots(req: Request, res: Response): Promise<void> {
     try {
-      console.log("Request body:", req.body);
       const { careHomeId, date, mealTypes } = req.body;
 
       // Validation
@@ -48,8 +47,31 @@ export class MealDonationController {
       }
 
       const parsedDate = new Date(date);
-      if (isNaN(parsedDate.getTime())) {
-        res.status(400).json({ error: "Invalid date format" });
+      // Set time to midnight for accurate date comparison
+      parsedDate.setHours(0, 0, 0, 0);
+      
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      // Check if date is in the past
+      if (parsedDate < today) {
+        res.status(400).json({ error: "Cannot create slots for past dates" });
+        return;
+      }
+
+      // Check for existing slots to prevent duplicates
+      const existingSlots = await MealDonationService.getSlotsByDateAndMealTypes(
+        careHomeId,
+        parsedDate,
+        mealTypes
+      );
+      
+      if (existingSlots.length > 0) {
+        const existingMealTypes = existingSlots.map(slot => slot.mealType);
+        res.status(409).json({ 
+          error: "Slots already exist for some meal types",
+          existingMealTypes 
+        });
         return;
       }
 
@@ -178,6 +200,81 @@ export class MealDonationController {
 
       res.status(400).json({
         error: "Failed to update slot status",
+        details: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  }
+
+  static async deleteSlot(req: Request, res: Response): Promise<void> {
+    try {
+      const slotId = parseInt(req.params.id);
+      
+      if (isNaN(slotId)) {
+        res.status(400).json({ error: "Invalid slot ID" });
+        return;
+      }
+
+      const slot = await MealDonationService.getSlotById(slotId);
+      
+      if (!slot) {
+        res.status(404).json({ error: "Slot not found" });
+        return;
+      }
+      
+      if (slot.status !== "Available") {
+        res.status(400).json({ 
+          error: "Cannot delete a slot that is not available" 
+        });
+        return;
+      }
+
+      await MealDonationService.deleteSlot(slotId);
+      res.status(200).json({ message: "Slot deleted successfully" });
+    } catch (error) {
+      console.error("Error in deleteSlot:", error);
+      res.status(500).json({
+        error: "Failed to delete meal slot",
+        details: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  }
+
+  static async reserveSlot(req: Request, res: Response): Promise<void> {
+    try {
+      const slotId = parseInt(req.params.id);
+      const { donorId } = req.body;
+
+      if (isNaN(slotId)) {
+        res.status(400).json({ error: "Invalid slot ID" });
+        return;
+      }
+
+      const reservedSlot = await MealDonationService.reserveSlot(slotId, donorId);
+      res.status(200).json(reservedSlot);
+    } catch (error) {
+      console.error("Error in reserveSlot:", error);
+      res.status(400).json({
+        error: "Failed to reserve meal slot",
+        details: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  }
+
+  static async confirmSlot(req: Request, res: Response): Promise<void> {
+    try {
+      const slotId = parseInt(req.params.id);
+
+      if (isNaN(slotId)) {
+        res.status(400).json({ error: "Invalid slot ID" });
+        return;
+      }
+
+      const confirmedSlot = await MealDonationService.confirmSlot(slotId);
+      res.status(200).json(confirmedSlot);
+    } catch (error) {
+      console.error("Error in confirmSlot:", error);
+      res.status(400).json({
+        error: "Failed to confirm meal slot",
         details: error instanceof Error ? error.message : "Unknown error",
       });
     }

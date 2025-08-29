@@ -26,13 +26,15 @@ model User {
   registrationNo String?
   category       CareHomeCategory?
 
-  // Relations
   donations        Donation[]
   needs            Need[]
   inventory        Inventory[]
   offeredMealSlots MealDonationSlot[] @relation("CareHomeMeals")
   bookedMeals      MealDonationSlot[] @relation("DonorBookedMeals")
 
+  donorChats    Chat[] @relation("DonorChats")
+  careHomeChats Chat[] @relation("CareHomeChats")
+  messages      Message[]
   @@map("users")
 }
 
@@ -106,10 +108,40 @@ model MealDonationSlot {
   careHome   User       @relation("CareHomeMeals", fields: [careHomeId], references: [id])
   donorId    Int?
   donor      User?      @relation("DonorBookedMeals", fields: [donorId], references: [id])
+  reservationTime DateTime?
   createdAt  DateTime   @default(now())
   updatedAt  DateTime   @updatedAt
 
   @@unique([date, mealType, careHomeId])
+}
+
+model Chat {
+  id        Int      @id @default(autoincrement())
+  donorId   Int
+  careHomeId Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  donor     User     @relation("DonorChats", fields: [donorId], references: [id])
+  careHome  User     @relation("CareHomeChats", fields: [careHomeId], references: [id])
+  messages  Message[]
+  
+  @@unique([donorId, careHomeId])
+  @@map("chats")
+}
+
+model Message {
+  id        Int      @id @default(autoincrement())
+  content   String
+  senderId  Int
+  chatId    Int
+  createdAt DateTime @default(now())
+  read      Boolean  @default(false)
+  
+  sender    User     @relation(fields: [senderId], references: [id])
+  chat      Chat     @relation(fields: [chatId], references: [id])
+  
+  @@map("messages")
 }
 
 enum MealType {
@@ -123,4 +155,5 @@ enum SlotStatus {
   Booked
   Completed
   Cancelled
+  Reserved
 }

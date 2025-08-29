@@ -13,6 +13,26 @@ export class MealDonationService {
     return MealDonationModel.createSlots(careHomeId, date, mealTypes);
   }
 
+    static async getSlotsByDateAndMealTypes(
+    careHomeId: number, 
+    date: Date, 
+    mealTypes: string[]
+  ) {
+    return MealDonationModel.getSlotsByDateAndMealTypes(
+      careHomeId, 
+      date, 
+      mealTypes
+    );
+  }
+
+  static async getSlotById(slotId: number) {
+    return MealDonationModel.getSlotById(slotId);
+  }
+
+  static async deleteSlot(slotId: number) {
+    return MealDonationModel.deleteSlot(slotId);
+  }
+
   static async bookSlot(slotId: number, donorId: number) {
     return MealDonationModel.bookSlot(slotId, donorId);
   }
@@ -27,4 +47,15 @@ export class MealDonationService {
   ) {
     return MealDonationModel.updateSlotStatus(slotId, status);
   }
+
+  static async reserveSlot(slotId: number, donorId: number) {
+    await MealDonationModel.releaseExpiredReservations();
+    
+    return MealDonationModel.reserveSlot(slotId, donorId);
+  }
+
+  static async confirmSlot(slotId: number) {
+    return MealDonationModel.confirmSlot(slotId);
+  }
+
 }
