@@ -52,8 +52,12 @@ export class InventoryController {
 
       const itemData: Omit<InventoryItemDTO, "id"> = {
         ...req.body,
-        userId, // Set the userId from authenticated user
+        userId,
       };
+
+      if (!itemData.unit) {
+        itemData.unit = "units";
+      }
 
       const newItem = await InventoryService.createItem(itemData);
       res.status(201).json(newItem);
@@ -77,7 +81,6 @@ export class InventoryController {
         return;
       }
 
-      // Ensure we don't try to update the ID or userId
       const { id: _, userId: __, ...updateData } = itemData;
 
       const updatedItem = await InventoryService.updateItem(

@@ -1,4 +1,3 @@
-// src/validations/auth.validation.ts
 import Joi from 'joi';
 
 export const validateRegister = (data: any) => {

@@ -15,7 +15,7 @@ export class DonationController {
       const donationData = {
         ...req.body,
         donorId: userId,
-        status: "completed",
+        status: "pending",
         date: new Date(),
       };
 
