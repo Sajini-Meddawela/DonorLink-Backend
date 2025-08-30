@@ -31,6 +31,7 @@ model User {
   inventory        Inventory[]
   offeredMealSlots MealDonationSlot[] @relation("CareHomeMeals")
   bookedMeals      MealDonationSlot[] @relation("DonorBookedMeals")
+  notifications    Notification[]
 
   donorChats    Chat[]    @relation("DonorChats")
   careHomeChats Chat[]    @relation("CareHomeChats")
@@ -148,6 +149,26 @@ model Message {
   @@map("messages")
 }
 
+model Notification {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  type      NotificationType
+  title     String
+  message   String
+  isRead    Boolean  @default(false)
+  relatedId Int?
+  actionUrl String?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([createdAt])
+  @@index([isRead])
+  @@index([type])
+  @@map("notifications")
+}
+
 enum MealType {
   Breakfast
   Lunch
@@ -160,4 +181,12 @@ enum SlotStatus {
   Completed
   Cancelled
   Reserved
+}
+
+enum NotificationType {
+  LOW_STOCK
+  NEW_DONATION
+  DONATION_STATUS
+  MEAL_BOOKING
+  SYSTEM
 }

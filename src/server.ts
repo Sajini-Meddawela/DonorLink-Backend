@@ -8,12 +8,15 @@ import authRoutes from "./routes/auth.routes";
 import donationRoutes from "./routes/donation.routes";
 import userRoutes from "./routes/user.routes";
 import chatRoutes from "./routes/chat.routes";
+import notificationRoutes from "./routes/notification.routes";
 import { errorHandler } from "./middleware/error.midleware";
 import dotenv from "dotenv";
 import cors from "cors";
 import http from "http";
 import { Server } from "socket.io";
 import { authenticateSocket } from "./middleware/auth.middleware";
+import { NotificationService } from "./services/notification.service";
+import { cleanupOldNotifications, scheduleCleanup } from "./scripts/cleanupNotifications";
 
 dotenv.config();
 
@@ -54,6 +57,63 @@ io.on("connection", (socket) => {
     socket.to(`chat_${chatId}`).emit("user_typing", { userId, isTyping });
   });
 
+  socket.on('mark_notification_read', async (data) => {
+    try {
+      await NotificationService.markAsRead(data.notificationId);
+      socket.emit('notification_read', { success: true, notificationId: data.notificationId });
+      
+      if (userId) {
+        const unreadCount = await NotificationService.getUnreadCount(userId);
+        io.to(`user_${userId}`).emit('unread_count_update', { count: unreadCount });
+      }
+    } catch (error) {
+      console.error("Error marking notification as read:", error);
+      socket.emit('notification_read', { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Unknown error' 
+      });
+    }
+  });
+
+  socket.on('mark_all_notifications_read', async () => {
+    try {
+      if (!userId) {
+        socket.emit('all_notifications_read', { 
+          success: false, 
+          error: 'User not authenticated' 
+        });
+        return;
+      }
+
+      await NotificationService.markAllAsRead(userId);
+      socket.emit('all_notifications_read', { success: true });
+      
+      const unreadCount = await NotificationService.getUnreadCount(userId);
+      io.to(`user_${userId}`).emit('unread_count_update', { count: unreadCount });
+    } catch (error) {
+      console.error("Error marking all notifications as read:", error);
+      socket.emit('all_notifications_read', { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Unknown error' 
+      });
+    }
+  });
+
+  socket.on('get_unread_count', async () => {
+    try {
+      if (!userId) {
+        socket.emit('unread_count', { count: 0 });
+        return;
+      }
+
+      const count = await NotificationService.getUnreadCount(userId);
+      socket.emit('unread_count', { count });
+    } catch (error) {
+      console.error("Error getting unread count:", error);
+      socket.emit('unread_count', { count: 0 });
+    }
+  });
+
   socket.on("disconnect", () => {
     console.log("User disconnected:", socket.id);
   });
@@ -82,6 +142,7 @@ app.use("/api/mealdonations", mealDonationRoutes);
 app.use("/api/carehomes", careHomeRoutes);
 app.use("/api/donations", donationRoutes);
 app.use("/api", chatRoutes);
+app.use("/api/notifications", notificationRoutes);
 
 app.use((req: Request, res: Response) => {
   res.status(404).json({ error: "Endpoint not found" });
@@ -102,6 +163,12 @@ server.listen(PORT, async () => {
   try {
     await prisma.$connect();
     console.log("Database connected successfully");
+    
+    // Start the notification cleanup scheduler
+    scheduleCleanup();
+    
+    cleanupOldNotifications();
+    
   } catch (error) {
     console.error("Database connection error:", error);
     process.exit(1);

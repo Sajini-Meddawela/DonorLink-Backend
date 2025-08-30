@@ -1,4 +1,5 @@
 import { MealDonationModel } from "../models/mealDonation.model";
+import { NotificationService } from "./notification.service";
 
 export class MealDonationService {
   static async getSlots(careHomeId: number, startDate: Date, endDate: Date) {
@@ -33,8 +34,17 @@ export class MealDonationService {
     return MealDonationModel.deleteSlot(slotId);
   }
 
-  static async bookSlot(slotId: number, donorId: number) {
-    return MealDonationModel.bookSlot(slotId, donorId);
+    static async bookSlot(slotId: number, donorId: number): Promise<any> {
+    const slot = await MealDonationModel.bookSlot(slotId, donorId);
+    
+    await NotificationService.createMealBookingNotification(
+      donorId,
+      slot.mealType,
+      new Date(slot.date).toLocaleDateString(),
+      slot.id!
+    );
+    
+    return slot;
   }
 
   static async getDonorBookings(donorId: number) {
