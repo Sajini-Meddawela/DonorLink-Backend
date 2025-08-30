@@ -136,17 +136,24 @@ model Chat {
 }
 
 model Message {
-  id        Int      @id @default(autoincrement())
-  content   String
-  senderId  Int
-  chatId    Int
-  createdAt DateTime @default(now())
-  read      Boolean  @default(false)
+  id          Int      @id @default(autoincrement())
+  content     String
+  senderId    Int
+  chatId      Int
+  read        Boolean  @default(false)
+  messageType String   @default("TEXT")
+  fileUrl     String?
+  fileName    String?
+  fileSize    Int?
+  mimeType    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
-  sender User @relation(fields: [senderId], references: [id])
-  chat   Chat @relation(fields: [chatId], references: [id])
+  sender User @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  chat   Chat @relation(fields: [chatId], references: [id], onDelete: Cascade)
 
-  @@map("messages")
+  @@index([chatId])
+  @@index([senderId])
 }
 
 model Notification {
