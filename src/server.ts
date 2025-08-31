@@ -19,10 +19,14 @@ import { NotificationService } from "./services/notification.service";
 import { cleanupOldNotifications, scheduleCleanup } from "./scripts/cleanupNotifications";
 import path from "path";
 import fs from "fs";
+import Stripe from "stripe";
 
 dotenv.config();
 
 const prisma = new PrismaClient();
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+apiVersion: "2024-06-20" as any,
+});
 
 const app = express();
 const server = http.createServer(app);
@@ -161,6 +165,83 @@ app.use('/uploads', express.static(uploadsDir, {
   }
 }));
 
+// Stripe webhook endpoint (for handling payment events)
+app.post('/api/webhooks/stripe', express.raw({type: 'application/json'}), async (req: Request, res: Response) => {
+  const sig = req.headers['stripe-signature'] as string;
+  const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
+
+  let event;
+
+  try {
+    if (!endpointSecret) {
+      throw new Error('STRIPE_WEBHOOK_SECRET is not set');
+    }
+
+    event = stripe.webhooks.constructEvent(req.body, sig, endpointSecret);
+  } catch (err) {
+    console.error('Webhook signature verification failed.', err);
+    return res.status(400).send(`Webhook Error: ${err instanceof Error ? err.message : 'Unknown error'}`);
+  }
+
+  // Handle the event
+  switch (event.type) {
+    case 'payment_intent.succeeded':
+      const paymentIntent = event.data.object;
+      try {
+      } catch (error) {
+        console.error('Error updating donation status:', error);
+      }
+      break;
+    case 'payment_intent.payment_failed':
+      const failedPaymentIntent = event.data.object;
+      break;
+    default:
+  }
+
+  res.json({received: true});
+});
+
+app.post('/api/create-payment-intent', async (req: Request, res: Response) => {
+  try {
+    const { amount, currency, metadata } = req.body;
+
+    if (!amount || !currency) {
+      return res.status(400).json({ error: 'Amount and currency are required' });
+    }
+
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount,
+      currency,
+      metadata,
+    });
+
+    res.status(200).json({ 
+      clientSecret: paymentIntent.client_secret,
+      paymentIntentId: paymentIntent.id
+    });
+  } catch (error) {
+    console.error('Error creating payment intent:', error);
+    res.status(500).json({ 
+      error: error instanceof Error ? error.message : 'Internal server error' 
+    });
+  }
+});
+
+app.get('/api/payment-intent/:id', async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    
+    const paymentIntent = await stripe.paymentIntents.retrieve(id);
+    
+    res.status(200).json({ paymentIntent });
+  } catch (error) {
+    console.error('Error retrieving payment intent:', error);
+    res.status(500).json({ 
+      error: error instanceof Error ? error.message : 'Internal server error' 
+    });
+  }
+});
+
 app.get("/health", (req: Request, res: Response) => {
   res.status(200).json({ status: "OK", timestamp: new Date().toISOString() });
 });
@@ -240,4 +321,4 @@ process.on("uncaughtException", (error) => {
   shutdown();
 });
 
-export { app, prisma, io };
+export { app, prisma, io, stripe };
