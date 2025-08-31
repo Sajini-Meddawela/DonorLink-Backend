@@ -17,6 +17,8 @@ import { Server } from "socket.io";
 import { authenticateSocket } from "./middleware/auth.middleware";
 import { NotificationService } from "./services/notification.service";
 import { cleanupOldNotifications, scheduleCleanup } from "./scripts/cleanupNotifications";
+import path from "path";
+import fs from "fs";
 
 dotenv.config();
 
@@ -129,6 +131,35 @@ app.use(
 );
 
 app.use(express.json());
+
+const uploadsDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
+app.use('/uploads', express.static(uploadsDir, {
+  setHeaders: (res, filePath) => {
+    const ext = path.extname(filePath);
+    if (ext === '.pdf') {
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', 'inline; filename="' + path.basename(filePath) + '"');
+    } else if (ext === '.jpg' || ext === '.jpeg') {
+      res.setHeader('Content-Type', 'image/jpeg');
+    } else if (ext === '.png') {
+      res.setHeader('Content-Type', 'image/png');
+    } else if (ext === '.gif') {
+      res.setHeader('Content-Type', 'image/gif');
+    } else if (ext === '.doc') {
+      res.setHeader('Content-Type', 'application/msword');
+      res.setHeader('Content-Disposition', 'attachment; filename="' + path.basename(filePath) + '"');
+    } else if (ext === '.docx') {
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+      res.setHeader('Content-Disposition', 'attachment; filename="' + path.basename(filePath) + '"');
+    } else if (ext === '.txt') {
+      res.setHeader('Content-Type', 'text/plain');
+    }
+  }
+}));
 
 app.get("/health", (req: Request, res: Response) => {
   res.status(200).json({ status: "OK", timestamp: new Date().toISOString() });
