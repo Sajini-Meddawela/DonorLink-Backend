@@ -69,6 +69,10 @@ export class MealDonationService {
   }
 
   static async getCareHomeMealDonations(careHomeId: number) {
-    return MealDonationModel.getCareHomeMealDonations(careHomeId);
+    const donations = await MealDonationModel.getCareHomeMealDonations(careHomeId);
+    return donations.map(donation => ({
+      ...donation,
+      donor: donation.donor 
+    }));
   }
 }

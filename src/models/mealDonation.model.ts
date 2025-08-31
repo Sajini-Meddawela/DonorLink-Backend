@@ -1,6 +1,9 @@
 import {
   PrismaClient,
   MealDonationSlot as PrismaMealDonationSlot,
+  User as PrismaUser,
+  SlotStatus,
+  MealType,
 } from "@prisma/client";
 
 const prisma = new PrismaClient();
@@ -8,11 +11,20 @@ const prisma = new PrismaClient();
 export interface MealDonationSlot {
   id?: number;
   date: Date;
-  mealType: "Breakfast" | "Lunch" | "Dinner";
-  status: "Available" | "Reserved" | "Booked" | "Completed" | "Cancelled";
+  mealType: MealType;
+  status: SlotStatus;
   careHomeId: number;
-  donorId?: number;
-  reservationTime?: Date;
+  donorId?: number | null;
+  donor?: {
+    id: number;
+    name: string;
+    email: string;
+  } | null;
+  reservationTime?: Date | null;
+  careHome?: {
+    id: number;
+    name: string;
+  } | null;
 }
 
 export interface CalendarDay {
@@ -22,20 +34,27 @@ export interface CalendarDay {
   dinner?: MealDonationSlot;
 }
 
-function toDTO(slot: PrismaMealDonationSlot): MealDonationSlot {
+function toDTO(slot: PrismaMealDonationSlot & {
+  donor?: Pick<PrismaUser, 'id' | 'name' | 'email'> | null;
+  careHome?: Pick<PrismaUser, 'id' | 'name'> | null;
+}): MealDonationSlot {
   return {
     id: slot.id,
     date: slot.date,
-    mealType: slot.mealType as "Breakfast" | "Lunch" | "Dinner",
-    status: slot.status as
-      | "Available"
-      | "Reserved"
-      | "Booked"
-      | "Completed"
-      | "Cancelled",
+    mealType: slot.mealType,
+    status: slot.status,
     careHomeId: slot.careHomeId,
     donorId: slot.donorId ?? undefined,
+    donor: slot.donor ? {
+      id: slot.donor.id,
+      name: slot.donor.name,
+      email: slot.donor.email,
+    } : undefined,
     reservationTime: slot.reservationTime ?? undefined,
+    careHome: slot.careHome ? {
+      id: slot.careHome.id,
+      name: slot.careHome.name,
+    } : undefined,
   };
 }
 
@@ -86,14 +105,22 @@ export const MealDonationModel = {
             email: true,
           },
         },
+        careHome: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
       },
       orderBy: {
         date: "desc",
       },
     });
+    
     return slots.map(toDTO);
   },
 
+  // ... rest of the methods remain the same, but ensure they all use toDTO for consistency
   async createSlots(
     careHomeId: number,
     date: Date,
@@ -133,6 +160,15 @@ export const MealDonationModel = {
   async getSlotById(slotId: number): Promise<MealDonationSlot | null> {
     const slot = await prisma.mealDonationSlot.findUnique({
       where: { id: slotId },
+      include: {
+        donor: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+      },
     });
     return slot ? toDTO(slot) : null;
   },
@@ -150,6 +186,15 @@ export const MealDonationModel = {
         donorId,
         status: "Booked",
       },
+      include: {
+        donor: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+      },
     });
     return toDTO(slot);
   },
@@ -163,6 +208,15 @@ export const MealDonationModel = {
       data: {
         status: status === "completed" ? "Completed" : "Cancelled",
       },
+      include: {
+        donor: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+      },
     });
     return toDTO(slot);
   },
@@ -170,6 +224,15 @@ export const MealDonationModel = {
   async getDonorBookings(donorId: number): Promise<MealDonationSlot[]> {
     const slots = await prisma.mealDonationSlot.findMany({
       where: { donorId },
+      include: {
+        donor: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+      },
     });
     return slots.map(toDTO);
   },
@@ -185,6 +248,15 @@ export const MealDonationModel = {
         status: "Reserved",
         reservationTime: new Date(),
       },
+      include: {
+        donor: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+      },
     });
     return toDTO(slot);
   },
@@ -195,6 +267,15 @@ export const MealDonationModel = {
       data: {
         status: "Booked",
         reservationTime: null,
+      },
+      include: {
+        donor: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
       },
     });
     return toDTO(slot);
