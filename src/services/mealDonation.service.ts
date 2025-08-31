@@ -14,14 +14,14 @@ export class MealDonationService {
     return MealDonationModel.createSlots(careHomeId, date, mealTypes);
   }
 
-    static async getSlotsByDateAndMealTypes(
-    careHomeId: number, 
-    date: Date, 
+  static async getSlotsByDateAndMealTypes(
+    careHomeId: number,
+    date: Date,
     mealTypes: string[]
   ) {
     return MealDonationModel.getSlotsByDateAndMealTypes(
-      careHomeId, 
-      date, 
+      careHomeId,
+      date,
       mealTypes
     );
   }
@@ -34,16 +34,16 @@ export class MealDonationService {
     return MealDonationModel.deleteSlot(slotId);
   }
 
-    static async bookSlot(slotId: number, donorId: number): Promise<any> {
+  static async bookSlot(slotId: number, donorId: number): Promise<any> {
     const slot = await MealDonationModel.bookSlot(slotId, donorId);
-    
+
     await NotificationService.createMealBookingNotification(
       donorId,
       slot.mealType,
       new Date(slot.date).toLocaleDateString(),
       slot.id!
     );
-    
+
     return slot;
   }
 
@@ -60,7 +60,7 @@ export class MealDonationService {
 
   static async reserveSlot(slotId: number, donorId: number) {
     await MealDonationModel.releaseExpiredReservations();
-    
+
     return MealDonationModel.reserveSlot(slotId, donorId);
   }
 
@@ -68,4 +68,7 @@ export class MealDonationService {
     return MealDonationModel.confirmSlot(slotId);
   }
 
+  static async getCareHomeMealDonations(careHomeId: number) {
+    return MealDonationModel.getCareHomeMealDonations(careHomeId);
+  }
 }

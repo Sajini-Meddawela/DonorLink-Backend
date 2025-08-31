@@ -29,7 +29,7 @@ export class MealDonationController {
     }
   }
 
-    static async createSlots(req: Request, res: Response): Promise<void> {
+  static async createSlots(req: Request, res: Response): Promise<void> {
     try {
       const { careHomeId, date, mealTypes } = req.body;
 
@@ -49,10 +49,10 @@ export class MealDonationController {
       const parsedDate = new Date(date);
       // Set time to midnight for accurate date comparison
       parsedDate.setHours(0, 0, 0, 0);
-      
+
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      
+
       // Check if date is in the past
       if (parsedDate < today) {
         res.status(400).json({ error: "Cannot create slots for past dates" });
@@ -60,17 +60,18 @@ export class MealDonationController {
       }
 
       // Check for existing slots to prevent duplicates
-      const existingSlots = await MealDonationService.getSlotsByDateAndMealTypes(
-        careHomeId,
-        parsedDate,
-        mealTypes
-      );
-      
+      const existingSlots =
+        await MealDonationService.getSlotsByDateAndMealTypes(
+          careHomeId,
+          parsedDate,
+          mealTypes
+        );
+
       if (existingSlots.length > 0) {
-        const existingMealTypes = existingSlots.map(slot => slot.mealType);
-        res.status(409).json({ 
+        const existingMealTypes = existingSlots.map((slot) => slot.mealType);
+        res.status(409).json({
           error: "Slots already exist for some meal types",
-          existingMealTypes 
+          existingMealTypes,
         });
         return;
       }
@@ -161,6 +162,32 @@ export class MealDonationController {
     }
   }
 
+  static async getSlotById(req: Request, res: Response): Promise<void> {
+    try {
+      const slotId = parseInt(req.params.id);
+
+      if (isNaN(slotId)) {
+        res.status(400).json({ error: "Invalid slot ID" });
+        return;
+      }
+
+      const slot = await MealDonationService.getSlotById(slotId);
+
+      if (!slot) {
+        res.status(404).json({ error: "Slot not found" });
+        return;
+      }
+
+      res.status(200).json(slot);
+    } catch (error) {
+      console.error("Error in getSlotById:", error);
+      res.status(500).json({
+        error: "Failed to fetch meal slot",
+        details: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  }
+
   static async updateSlotStatus(req: Request, res: Response): Promise<void> {
     try {
       const slotId = parseInt(req.params.id);
@@ -172,11 +199,9 @@ export class MealDonationController {
       }
 
       if (!status || !["completed", "cancelled"].includes(status)) {
-        res
-          .status(400)
-          .json({
-            error: "Invalid status. Must be 'completed' or 'cancelled'",
-          });
+        res.status(400).json({
+          error: "Invalid status. Must be 'completed' or 'cancelled'",
+        });
         return;
       }
 
@@ -205,25 +230,50 @@ export class MealDonationController {
     }
   }
 
+  static async getCareHomeMealDonations(
+    req: Request,
+    res: Response
+  ): Promise<void> {
+    try {
+      const careHomeId = parseInt(req.params.careHomeId);
+
+      if (isNaN(careHomeId)) {
+        res.status(400).json({ error: "Invalid careHomeId" });
+        return;
+      }
+
+      const donations = await MealDonationService.getCareHomeMealDonations(
+        careHomeId
+      );
+      res.status(200).json(donations);
+    } catch (error) {
+      console.error("Error in getCareHomeMealDonations:", error);
+      res.status(500).json({
+        error: "Failed to fetch meal donations",
+        details: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  }
+
   static async deleteSlot(req: Request, res: Response): Promise<void> {
     try {
       const slotId = parseInt(req.params.id);
-      
+
       if (isNaN(slotId)) {
         res.status(400).json({ error: "Invalid slot ID" });
         return;
       }
 
       const slot = await MealDonationService.getSlotById(slotId);
-      
+
       if (!slot) {
         res.status(404).json({ error: "Slot not found" });
         return;
       }
-      
+
       if (slot.status !== "Available") {
-        res.status(400).json({ 
-          error: "Cannot delete a slot that is not available" 
+        res.status(400).json({
+          error: "Cannot delete a slot that is not available",
         });
         return;
       }
@@ -249,7 +299,10 @@ export class MealDonationController {
         return;
       }
 
-      const reservedSlot = await MealDonationService.reserveSlot(slotId, donorId);
+      const reservedSlot = await MealDonationService.reserveSlot(
+        slotId,
+        donorId
+      );
       res.status(200).json(reservedSlot);
     } catch (error) {
       console.error("Error in reserveSlot:", error);

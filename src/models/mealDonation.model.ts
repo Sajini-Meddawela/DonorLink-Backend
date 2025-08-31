@@ -12,7 +12,7 @@ export interface MealDonationSlot {
   status: "Available" | "Reserved" | "Booked" | "Completed" | "Cancelled";
   careHomeId: number;
   donorId?: number;
-  reservationTime?: Date; 
+  reservationTime?: Date;
 }
 
 export interface CalendarDay {
@@ -27,7 +27,12 @@ function toDTO(slot: PrismaMealDonationSlot): MealDonationSlot {
     id: slot.id,
     date: slot.date,
     mealType: slot.mealType as "Breakfast" | "Lunch" | "Dinner",
-    status: slot.status as "Available" | "Reserved" | "Booked" | "Completed" | "Cancelled",
+    status: slot.status as
+      | "Available"
+      | "Reserved"
+      | "Booked"
+      | "Completed"
+      | "Cancelled",
     careHomeId: slot.careHomeId,
     donorId: slot.donorId ?? undefined,
     reservationTime: slot.reservationTime ?? undefined,
@@ -49,6 +54,41 @@ export const MealDonationModel = {
           gte: startDate,
           lte: endDate,
         },
+      },
+      include: {
+        donor: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+      },
+    });
+    return slots.map(toDTO);
+  },
+
+  async getCareHomeMealDonations(
+    careHomeId: number
+  ): Promise<MealDonationSlot[]> {
+    const slots = await prisma.mealDonationSlot.findMany({
+      where: {
+        careHomeId,
+        status: {
+          in: ["Booked", "Completed", "Cancelled"],
+        },
+      },
+      include: {
+        donor: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+      },
+      orderBy: {
+        date: "desc",
       },
     });
     return slots.map(toDTO);
@@ -134,7 +174,10 @@ export const MealDonationModel = {
     return slots.map(toDTO);
   },
 
-  async reserveSlot(slotId: number, donorId: number): Promise<MealDonationSlot> {
+  async reserveSlot(
+    slotId: number,
+    donorId: number
+  ): Promise<MealDonationSlot> {
     const slot = await prisma.mealDonationSlot.update({
       where: { id: slotId },
       data: {
@@ -151,7 +194,7 @@ export const MealDonationModel = {
       where: { id: slotId },
       data: {
         status: "Booked",
-        reservationTime: null, 
+        reservationTime: null,
       },
     });
     return toDTO(slot);
@@ -160,7 +203,7 @@ export const MealDonationModel = {
   async releaseExpiredReservations(): Promise<void> {
     const expiryTime = new Date();
     expiryTime.setMinutes(expiryTime.getMinutes() - RESERVATION_EXPIRY_MINUTES);
-    
+
     await prisma.mealDonationSlot.updateMany({
       where: {
         status: "Reserved",

@@ -11,5 +11,7 @@ router.patch("/:id/status", MealDonationController.updateSlotStatus);
 router.delete("/:id", MealDonationController.deleteSlot); 
 router.post("/:id/reserve", MealDonationController.reserveSlot); 
 router.post("/:id/confirm", MealDonationController.confirmSlot); 
+router.get("/:id", MealDonationController.getSlotById);
+router.get("/carehome/:careHomeId", MealDonationController.getCareHomeMealDonations);
 
 export default router;
