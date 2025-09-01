@@ -12,5 +12,7 @@ router.post('/', InventoryController.createItem);
 router.put('/:id', InventoryController.updateItem);
 router.delete('/:id', InventoryController.deleteItem);
 router.get('/search', InventoryController.searchItems);
+router.post('/bulk-import', InventoryController.bulkImport);
+router.delete('/bulk-delete', InventoryController.bulkDelete);
 
 export default router;

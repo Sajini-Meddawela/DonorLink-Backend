@@ -188,4 +188,24 @@ export class InventoryService {
     if (percentage < 50) return "Medium";
     return "Low";
   }
+
+  static async bulkImportItems(
+    items: Omit<InventoryItemDTO, "id">[],
+    userId: number
+  ): Promise<InventoryItemDTO[]> {
+    const createdItems: InventoryItemDTO[] = [];
+    for (const item of items) {
+      const newItem = await InventoryModel.create({
+        ...item,
+        userId,
+      });
+      createdItems.push(newItem);
+      await this.checkAndGenerateNeeds(newItem, userId);
+    }
+    return createdItems;
+  }
+
+  static async bulkDeleteItems(userId: number): Promise<void> {
+    await InventoryModel.bulkDelete(userId);
+  }
 }
