@@ -95,4 +95,21 @@ export const InventoryModel = {
     });
     return items.map(toDTO);
   },
+
+  async bulkDelete(userId: number): Promise<void> {
+    await prisma.donation.updateMany({
+      where: {
+        inventory: {
+          userId: userId,
+        },
+      },
+      data: {
+        inventoryId: null,
+      },
+    });
+
+    await prisma.inventory.deleteMany({
+      where: { userId },
+    });
+  },
 };

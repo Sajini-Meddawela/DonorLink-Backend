@@ -142,4 +142,59 @@ export class InventoryController {
       res.status(500).json({ error: "Failed to search inventory items" });
     }
   }
+
+  static async bulkImport(req: Request, res: Response): Promise<void> {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        res.status(401).json({ error: "Unauthorized" });
+        return;
+      }
+
+      const items: Omit<InventoryItemDTO, "id">[] = req.body.items;
+
+      if (!items || !Array.isArray(items)) {
+        res.status(400).json({ error: "Invalid items array" });
+        return;
+      }
+
+      const createdItems = await InventoryService.bulkImportItems(
+        items,
+        userId
+      );
+      res.status(201).json(createdItems);
+    } catch (error) {
+      console.error("Error bulk importing inventory items:", error);
+      res.status(400).json({
+        error: "Failed to bulk import inventory items",
+        details: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  }
+
+  static async bulkDelete(req: Request, res: Response): Promise<void> {
+    try {
+      const userId = parseInt(req.query.userId as string);
+      if (isNaN(userId)) {
+        res.status(400).json({ error: "Invalid user ID" });
+        return;
+      }
+
+      if (req.user?.id !== userId) {
+        res.status(403).json({ error: "Forbidden" });
+        return;
+      }
+
+      await InventoryService.bulkDeleteItems(userId);
+      res
+        .status(200)
+        .json({ message: "All inventory items deleted successfully" });
+    } catch (error) {
+      console.error("Error bulk deleting inventory items:", error);
+      res.status(400).json({
+        error: "Failed to bulk delete inventory items",
+        details: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  }
 }
