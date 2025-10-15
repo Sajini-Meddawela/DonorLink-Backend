@@ -36,4 +36,14 @@ export class NeedService {
   static async getCareHomeNeeds(careHomeId: number): Promise<NeedItemDTO[]> {
     return await NeedModel.getAll(careHomeId);
   }
+
+   static async getUrgentNeeds(page: number = 1, limit: number = 20): Promise<{
+    needs: any[];
+    totalCount: number;
+    currentPage: number;
+    totalPages: number;
+    hasMore: boolean;
+  }> {
+    return await NeedModel.getUrgentNeeds(page, limit);
+  }
 }
