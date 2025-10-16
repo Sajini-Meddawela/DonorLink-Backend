@@ -140,4 +140,17 @@ export class NeedController {
       res.status(500).json({ error: "Failed to fetch care home needs" });
     }
   }
+
+    static async getUrgentNeeds(req: Request, res: Response): Promise<void> {
+    try {
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 20;
+
+      const urgentNeeds = await NeedService.getUrgentNeeds(page, limit);
+      res.status(200).json(urgentNeeds);
+    } catch (error) {
+      console.error("Error fetching urgent needs:", error);
+      res.status(500).json({ error: "Failed to fetch urgent needs" });
+    }
+  }
 }

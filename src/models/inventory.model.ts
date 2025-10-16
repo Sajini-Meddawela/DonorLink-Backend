@@ -41,6 +41,19 @@ export const InventoryModel = {
     return item ? toDTO(item) : null;
   },
 
+  async getByNameAndUser(itemName: string, userId: number): Promise<InventoryItemDTO | null> {
+    const item = await prisma.inventory.findFirst({
+      where: { 
+        itemName: {
+          equals: itemName,
+          mode: 'insensitive' 
+        },
+        userId 
+      },
+    });
+    return item ? toDTO(item) : null;
+  },
+
   async create(item: Omit<InventoryItemDTO, "id">): Promise<InventoryItemDTO> {
     const createdItem = await prisma.inventory.create({
       data: {

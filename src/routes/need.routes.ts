@@ -45,4 +45,6 @@ router.get(
   NeedController.getCareHomeNeeds
 );
 
+router.get("/urgent/all", authenticate, NeedController.getUrgentNeeds);
+
 export default router;

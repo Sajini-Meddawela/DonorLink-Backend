@@ -70,4 +70,70 @@ export const NeedModel = {
       where: { id, userId },
     });
   },
+
+  async getUrgentNeeds(page: number = 1, limit: number = 20): Promise<{
+    needs: any[];
+    totalCount: number;
+    currentPage: number;
+    totalPages: number;
+    hasMore: boolean;
+  }> {
+    const skip = (page - 1) * limit;
+
+    const urgentNeeds = await prisma.need.findMany({
+      where: {
+        user: {
+          role: "CAREHOME",
+          isVerified: true,
+        },
+        urgencyLevel: "High",
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            category: true,
+            address: true,
+          },
+        },
+      },
+      skip,
+      take: limit,
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+
+    const totalUrgentNeeds = await prisma.need.count({
+      where: {
+        user: {
+          role: "CAREHOME",
+          isVerified: true,
+        },
+        urgencyLevel: "High",
+      },
+    });
+
+    const simplifiedNeeds = urgentNeeds.map(need => ({
+      id: need.id,
+      itemName: need.itemName,
+      requiredQuantity: need.requiredQuantity,
+      category: need.category,
+      urgencyLevel: need.urgencyLevel,
+      unit: need.unit,
+      careHomeId: need.userId,
+      careHomeName: need.user.name,
+      careHomeCategory: need.user.category,
+      careHomeAddress: need.user.address,
+    }));
+
+    return {
+      needs: simplifiedNeeds,
+      totalCount: totalUrgentNeeds,
+      currentPage: page,
+      totalPages: Math.ceil(totalUrgentNeeds / limit),
+      hasMore: skip + urgentNeeds.length < totalUrgentNeeds,
+    };
+  },
 };

@@ -20,11 +20,29 @@ export class InventoryService {
   static async createItem(
     itemData: Omit<InventoryItemDTO, "id">
   ): Promise<InventoryItemDTO> {
-    const newItem = await InventoryModel.create(itemData);
+    const existingItem = await InventoryModel.getByNameAndUser(
+      itemData.itemName, 
+      itemData.userId
+    );
 
-    await this.checkAndGenerateNeeds(newItem, newItem.userId);
+    if (existingItem) {
+      const updatedStockLevel = existingItem.stockLevel + itemData.stockLevel;
+      const updatedItem = await InventoryModel.update(
+        existingItem.id!,
+        itemData.userId,
+        {
+          ...itemData,
+          stockLevel: updatedStockLevel
+        }
+      );
 
-    return newItem;
+      await this.checkAndGenerateNeeds(updatedItem, updatedItem.userId);
+      return updatedItem;
+    } else {
+      const newItem = await InventoryModel.create(itemData);
+      await this.checkAndGenerateNeeds(newItem, newItem.userId);
+      return newItem;
+    }
   }
 
   static async updateItem(
@@ -76,19 +94,16 @@ export class InventoryService {
     userId: number
   ): Promise<void> {
     try {
-      const allItems = await InventoryModel.getAll(userId);
-      const item = allItems.find(
-        (i) => i.itemName === itemName && i.unit === unit
-      );
+      const existingItem = await InventoryModel.getByNameAndUser(itemName, userId);
 
-      if (item && item.id) {
-        const newStockLevel = item.stockLevel + quantity;
-        await InventoryModel.update(item.id, userId, {
+      if (existingItem && existingItem.id) {
+        const newStockLevel = existingItem.stockLevel + quantity;
+        await InventoryModel.update(existingItem.id, userId, {
           stockLevel: newStockLevel,
         });
 
         await this.checkAndGenerateNeeds(
-          { ...item, stockLevel: newStockLevel },
+          { ...existingItem, stockLevel: newStockLevel },
           userId
         );
       } else {
@@ -194,13 +209,30 @@ export class InventoryService {
     userId: number
   ): Promise<InventoryItemDTO[]> {
     const createdItems: InventoryItemDTO[] = [];
+    
     for (const item of items) {
-      const newItem = await InventoryModel.create({
-        ...item,
-        userId,
-      });
-      createdItems.push(newItem);
-      await this.checkAndGenerateNeeds(newItem, userId);
+      const existingItem = await InventoryModel.getByNameAndUser(item.itemName, userId);
+      
+      if (existingItem) {
+        const updatedStockLevel = existingItem.stockLevel + item.stockLevel;
+        const updatedItem = await InventoryModel.update(
+          existingItem.id!,
+          userId,
+          {
+            ...item,
+            stockLevel: updatedStockLevel
+          }
+        );
+        createdItems.push(updatedItem);
+        await this.checkAndGenerateNeeds(updatedItem, userId);
+      } else {
+        const newItem = await InventoryModel.create({
+          ...item,
+          userId,
+        });
+        createdItems.push(newItem);
+        await this.checkAndGenerateNeeds(newItem, userId);
+      }
     }
     return createdItems;
   }
