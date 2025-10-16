@@ -7,9 +7,12 @@ export const validateRegister = (data: any) => {
     password: Joi.string().min(8).required(),
     phone: Joi.string().required(),
     role: Joi.string().valid('DONOR', 'CAREHOME').required(),
-    registrationNo: Joi.when('role', {
+      registrationNo: Joi.when('role', {
       is: 'CAREHOME',
-      then: Joi.string().required(),
+      then: Joi.string().pattern(/^RD/).required().messages({
+        'string.pattern.base': 'Registration number must start with "RD"',
+        'any.required': 'Registration number is required for care homes'
+      }),
       otherwise: Joi.string().optional()
     }),
     category: Joi.when('role', {

@@ -18,6 +18,19 @@ interface RegisterUserData {
 
 class AuthService {
   static async registerUser(userData: RegisterUserData) {
+    if (userData.role === "CAREHOME" && userData.registrationNo) {
+      const existingCareHome = await prisma.user.findFirst({
+        where: {
+          registrationNo: userData.registrationNo,
+          role: "CAREHOME"
+        }
+      });
+
+      if (existingCareHome) {
+        throw new Error("REGISTRATION_NUMBER_EXISTS");
+      }
+    }
+
     const hashedPassword = await bcrypt.hash(userData.password, saltRounds);
 
     const category =

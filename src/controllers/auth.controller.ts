@@ -14,6 +14,7 @@ import {
 } from "../validations/auth.validation";
 
 const prisma = new PrismaClient();
+
 class AuthController {
   static async register(req: Request, res: Response) {
     try {
@@ -32,39 +33,49 @@ class AuthController {
         address,
       } = req.body;
 
+      // Check for existing email
       const existingUser = await UserService.findUserByEmail(email);
       if (existingUser) {
         return res.status(400).json({ message: "Email already in use" });
       }
 
-      const user = await AuthService.registerUser({
-        name,
-        email,
-        password,
-        phone,
-        role,
-        registrationNo,
-        category,
-        address,
-      });
+      try {
+        const user = await AuthService.registerUser({
+          name,
+          email,
+          password,
+          phone,
+          role,
+          registrationNo,
+          category,
+          address,
+        });
 
-      // Generate verification token
-      const verificationToken = await AuthService.generateVerificationToken(
-        user.id
-      );
+        // Generate verification token
+        const verificationToken = await AuthService.generateVerificationToken(
+          user.id
+        );
 
-      await EmailService.sendVerificationEmail(user.email, verificationToken);
+        await EmailService.sendVerificationEmail(user.email, verificationToken);
 
-      res.status(201).json({
-        message:
-          "Registration successful. Please check your email for verification.",
-        user: {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          role: user.role,
-        },
-      });
+        res.status(201).json({
+          message:
+            "Registration successful. Please check your email for verification.",
+          user: {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+          },
+        });
+      } catch (error: any) {
+        if (error.message === "REGISTRATION_NUMBER_EXISTS") {
+          return res.status(400).json({ 
+            message: "Registration number already exists. Please use a different registration number." 
+          });
+        }
+        throw error;
+      }
     } catch (error) {
       console.error("Registration error:", error);
       res.status(500).json({ message: "Internal server error" });
@@ -228,6 +239,7 @@ class AuthController {
       res.status(500).json({ message: "Internal server error" });
     }
   }
+
   static async verifyOTP(req: Request, res: Response) {
     try {
       const { email, otp } = req.body;
